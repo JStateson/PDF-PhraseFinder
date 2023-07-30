@@ -122,15 +122,18 @@
 Click the run button to start a search
 Only phrases checked wil be used
 Click Add Phrase to add a phrase
-Click Remove Phrase to remove selected phrases
+Click Remove Phrase to remove highlighted phrases.  The checkbox is not used
+when removing phrases.  You just use the mouse to highlight one lor more rows
 Click SAVE to save your phrases
-page viewing shows up after a successful search
-click on a phrase to select the pages then click ViewDoc
+Page viewing widgets show up after a successful search
+Click on a phrase to select the pages then click ViewDoc
 The numeric up/down will display the next matching pages
 
-Export/Import is to the clipboard.  Use the copy and paste
-functions use windows clipboard.  Alternately use the Setting dialog box
+Export/Import is to the clipboard.  Use windows copy and paste
+functions together with noteopad.  Alternately use the Setting dialog box
 The  settings allows copy and paste where you can see what
-is being constructed.</value>
+is being constructed.   Be sure to click save after making any changes.
+
+Hyphens, slashes and underscores are ignored by the searching tool used.</value>
   </data>
 </root>

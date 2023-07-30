@@ -617,6 +617,7 @@ namespace PDF_PhraseFinder
             DialogResult dialogResult = MessageBox.Show(
     "This operation will delete " + n + " highlighted filter phrases.  Are you sure?",
     "Warning: don't forget to save", MessageBoxButtons.YesNo);
+            if (n == 0) return;
             n = NumPhrases - n;
             if (dialogResult == DialogResult.Yes)
             {
