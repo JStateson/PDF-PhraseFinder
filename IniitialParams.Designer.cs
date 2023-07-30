@@ -36,11 +36,15 @@
             tbPhrases = new TextBox();
             toolTip1 = new ToolTip(components);
             label1 = new Label();
+            label2 = new Label();
+            btnChkErr = new Button();
             groupBox2.SuspendLayout();
             SuspendLayout();
             // 
             // groupBox2
             // 
+            groupBox2.Controls.Add(btnChkErr);
+            groupBox2.Controls.Add(label2);
             groupBox2.Controls.Add(label1);
             groupBox2.Controls.Add(btnCancel);
             groupBox2.Controls.Add(btnApply);
@@ -48,7 +52,7 @@
             groupBox2.Controls.Add(tbPhrases);
             groupBox2.Location = new Point(31, 44);
             groupBox2.Name = "groupBox2";
-            groupBox2.Size = new Size(695, 330);
+            groupBox2.Size = new Size(695, 376);
             groupBox2.TabIndex = 0;
             groupBox2.TabStop = false;
             groupBox2.Text = "Default Phrases";
@@ -86,22 +90,42 @@
             // 
             // tbPhrases
             // 
-            tbPhrases.Location = new Point(25, 31);
+            tbPhrases.Location = new Point(6, 74);
             tbPhrases.Multiline = true;
             tbPhrases.Name = "tbPhrases";
             tbPhrases.ScrollBars = ScrollBars.Both;
-            tbPhrases.Size = new Size(460, 246);
+            tbPhrases.Size = new Size(460, 281);
             tbPhrases.TabIndex = 0;
             // 
             // label1
             // 
             label1.AutoSize = true;
             label1.BackColor = SystemColors.Info;
-            label1.Location = new Point(508, 224);
+            label1.Location = new Point(506, 265);
             label1.Name = "label1";
-            label1.Size = new Size(155, 45);
-            label1.TabIndex = 4;
-            label1.Text = "Be sure to click the \r\n\"Save Phrases\"when\r\nyou return to the main form";
+            label1.Size = new Size(178, 90);
+            label1.TabIndex = 5;
+            label1.Text = "Be sure to click the \r\n\"Save Phrases\"when\r\nyou return to the main form\r\nDashs, slash, underscore and\r\nall puncuation are ignored.\r\nDo not use them in your phrases";
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.BackColor = SystemColors.Info;
+            label2.Location = new Point(34, 39);
+            label2.Name = "label2";
+            label2.Size = new Size(299, 15);
+            label2.TabIndex = 6;
+            label2.Text = "Use the clipboard and notepad to save / restore phrases\r\n";
+            // 
+            // btnChkErr
+            // 
+            btnChkErr.Location = new Point(553, 210);
+            btnChkErr.Name = "btnChkErr";
+            btnChkErr.Size = new Size(102, 23);
+            btnChkErr.TabIndex = 7;
+            btnChkErr.Text = "Check Syntax";
+            btnChkErr.UseVisualStyleBackColor = true;
+            btnChkErr.Click += btnChkErr_Click;
             // 
             // InitialParams
             // 
@@ -124,6 +148,8 @@
         private ToolTip toolTip1;
         private Button btnClear;
         private Button btnCancel;
+        private Label label2;
         private Label label1;
+        private Button btnChkErr;
     }
 }

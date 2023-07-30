@@ -134,6 +134,7 @@ functions together with noteopad.  Alternately use the Setting dialog box
 The  settings allows copy and paste where you can see what
 is being constructed.   Be sure to click save after making any changes.
 
-Hyphens, slashes and underscores are ignored by the searching tool used.</value>
+Hyphens, slashes and underscores are ignored by the searching tool used.
+Be sure to check phrase syntax and avoid those characters.</value>
   </data>
 </root>

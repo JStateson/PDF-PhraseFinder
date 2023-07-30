@@ -15,6 +15,7 @@ namespace PDF_PhraseFinder
     {
         private List<string> OutStr;
         private string[] str1;
+        private string[] str2;  
         public InitialParams(ref string[] InitialPhrase, ref List<string> strReturn)
         {
             InitializeComponent();
@@ -31,12 +32,15 @@ namespace PDF_PhraseFinder
             tbPhrases.Text = "";
         }
 
-        private void btnApply_Click(object sender, EventArgs e)
+        private string[] StrToStrs(string strIn)
         {
             char[] delimiters = new char[] { '\r', '\n' };
+            return strIn.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+        }
 
-            string strIn = tbPhrases.Text;
-            str1 = strIn.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+        private void btnApply_Click(object sender, EventArgs e)
+        {
+            str1 = StrToStrs(tbPhrases.Text);
             foreach (string str in str1)
             {
                 OutStr.Add(str);
@@ -44,10 +48,39 @@ namespace PDF_PhraseFinder
             this.Close();
         }
 
+        private bool CheckSyntax()
+        {
+            string BadLetters = ".,/|[]{}\\-_=!@#$%^ &*()+`~,./;:'\"";
+            string strBad = "";
+            int n = BadLetters.Length;
+            str1 = StrToStrs(tbPhrases.Text);
+            foreach (string str in str1)
+            {
+                for(int i = 0; i < n; i++)
+                {
+                    if(str.Contains(BadLetters.Substring(i,1)))
+                    {
+                        strBad += str + "\r\n";
+                        break;
+                    }
+                }
+            }
+            if(strBad != "")
+            {
+                MessageBox.Show(strBad, "Bad phrases");
+            }
+            return false;
+        }
+
         private void btnCancel_Click(object sender, EventArgs e)
         {
             OutStr.Clear();
             this.Close();
+        }
+
+        private void btnChkErr_Click(object sender, EventArgs e)
+        {
+            CheckSyntax();
         }
     }
 }

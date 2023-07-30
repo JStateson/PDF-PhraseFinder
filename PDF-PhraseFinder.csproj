@@ -9,6 +9,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Platforms>AnyCPU;x64</Platforms>
     <StartupObject>PDF_PhraseFinder.Program</StartupObject>
+    <ApplicationIcon>usda.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,6 +31,10 @@
       <Isolated>false</Isolated>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </COMReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="usda.ico" />
   </ItemGroup>
 
   <ItemGroup>
