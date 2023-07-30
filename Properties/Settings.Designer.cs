@@ -57,5 +57,17 @@ namespace PDF_PhraseFinder.Properties {
                 this["bIgnoreCase"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string UsePhrase {
+            get {
+                return ((string)(this["UsePhrase"]));
+            }
+            set {
+                this["UsePhrase"] = value;
+            }
+        }
     }
 }

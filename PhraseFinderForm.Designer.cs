@@ -53,6 +53,7 @@ namespace PDF_PhraseFinder
             tbPdfName = new TextBox();
             groupBox5 = new GroupBox();
             groupBox4 = new GroupBox();
+            tbpageNum = new TextBox();
             btnStopScan = new Button();
             pbarLoading = new ProgressBar();
             btnRunSearch = new Button();
@@ -70,7 +71,6 @@ namespace PDF_PhraseFinder
             tbViewPage = new TextBox();
             nudPage = new NumericUpDown();
             btnViewDoc = new Button();
-            tbpageNum = new TextBox();
             MStrip.SuspendLayout();
             groupBox1.SuspendLayout();
             groupBox3.SuspendLayout();
@@ -266,6 +266,13 @@ namespace PDF_PhraseFinder
             groupBox4.TabStop = false;
             groupBox4.Text = "Exit Early";
             // 
+            // tbpageNum
+            // 
+            tbpageNum.Location = new Point(181, 29);
+            tbpageNum.Name = "tbpageNum";
+            tbpageNum.Size = new Size(51, 23);
+            tbpageNum.TabIndex = 1;
+            // 
             // btnStopScan
             // 
             btnStopScan.Enabled = false;
@@ -449,13 +456,6 @@ namespace PDF_PhraseFinder
             btnViewDoc.Text = "View Doc";
             btnViewDoc.UseVisualStyleBackColor = true;
             btnViewDoc.Click += btnViewDoc_Click;
-            // 
-            // tbpageNum
-            // 
-            tbpageNum.Location = new Point(181, 29);
-            tbpageNum.Name = "tbpageNum";
-            tbpageNum.Size = new Size(51, 23);
-            tbpageNum.TabIndex = 1;
             // 
             // PhraseFinderForm
             // 

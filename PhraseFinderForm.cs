@@ -2,6 +2,7 @@
 using Acrobat;
 using AFORMAUTLib;
 using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
 // data mining PDF appplication
@@ -72,6 +73,19 @@ namespace PDF_PhraseFinder
                 Phrase = aPhrase;
                 nFollowing = CountWords(aPhrase);
             }
+
+            public void InitPhrase(string aPhrase, bool bSelect)
+            {
+                Select = bSelect;
+                Number = " ";
+                iNumber = 0;
+                strPages = "";
+                iDupPageCnt = 0;
+                iLastPage = -1;
+                Phrase = aPhrase;
+                nFollowing = CountWords(aPhrase);
+            }
+
             public void AddPage(int jPage) // do not add the same page twice
             {
                 int iPage = jPage + 1;
@@ -106,6 +120,8 @@ namespace PDF_PhraseFinder
         // same line.  Since the SDK retrieves whole words there is no need for a space before or after a phrase
         private string[] InitialPhrase = new string[5] { "and", "address", "make sure", "motherboard", "memory" };
         private string[] WorkingPhrases = new string[5]; // same as above but optomises somewhat for case sensitivity
+        private bool[] bUsePhrase = new bool[5] { true, true, true, true, true };
+        private string strUsePhrase = "11111";
 
         //show a simple date on the form
         private string GetSimpleDate(string sDT)
@@ -116,6 +132,45 @@ namespace PDF_PhraseFinder
             int j = sDT.LastIndexOf('.');
             return sDT.Substring(i, j - i);
         }
+        /// <summary>
+        /// change string value of 11l01 to true,true,true,false,true
+        /// need to tell which phrases are to be used
+        /// </summary>
+        private void SetPhraseUsage()
+        {
+            int n = strUsePhrase.Length;
+            bUsePhrase = new bool[n];
+            for (int i = 0; i < n; i++)
+            {
+                bUsePhrase[i] = strUsePhrase.Substring(i, 1) == "1";
+            }
+        }
+        /// <summary>
+        /// change bool to string of 0 or 1
+        /// </summary>
+        private void SavePhraseUsage()
+        {
+            strUsePhrase = "";
+            foreach (bool b in bUsePhrase)
+            {
+                strUsePhrase += b ? "1" : "0";
+            }
+            Properties.Settings.Default.UsePhrase = strUsePhrase;
+        }
+
+        /// <summary>
+        /// need a bunch of '1' for boolean settings
+        /// </summary>
+        /// <param name="n"></param>
+        /// <returns></returns>
+        private string PadTrue(int n)
+        {
+            string strReturn = "";
+            for (int i = 0; i < n; i++)
+                strReturn += "1";
+            return strReturn;
+        }
+
 
         public PhraseFinderForm()
         {
@@ -150,6 +205,16 @@ namespace PDF_PhraseFinder
             {
                 SaveSettings();
             }
+            if ("" != Properties.Settings.Default.UsePhrase)
+            {
+                strUsePhrase = Properties.Settings.Default.UsePhrase;
+                if (NumPhrases != strUsePhrase.Length)
+                {
+                    strUsePhrase = PadTrue(NumPhrases);
+                }
+            }
+            Properties.Settings.Default.UsePhrase = strUsePhrase;
+            SetPhraseUsage();
             FillPhrases();
             GetLocalSettings();
             tbPdfName.Text = "Build date: " + GetSimpleDate(Properties.Resources.BuildDate) +
@@ -242,7 +307,7 @@ namespace PDF_PhraseFinder
             string chkWord = "";
             try
             {
-                chkWord = theseFields.ExecuteThisJavascript("event.value=this.getPageNthWord(" + iCurrentPage + "," + iCurrent + ", true);");
+                chkWord = theseFields.ExecuteThisJavascript("event.value=this.getPageNthWord(" + iCurrentPage + "," + iCurrent + ", true);"); // true
             }
             catch
             {
@@ -259,6 +324,7 @@ namespace PDF_PhraseFinder
         /// <param name="fileName"></param>
         private void ViewDoc(string fileName)
         {
+            if (iCurrentPage < 0) return;
             ThisDoc = new AcroAVDoc();
             ThisDoc.Open(fileName, "");
             ThisDoc.BringToFront();
@@ -350,11 +416,11 @@ namespace PDF_PhraseFinder
             TotalMatches = 0;
             //            StreamWriter sw = new StreamWriter(@"D:\java\output.txt", false);
             //    substract 1 from page number index to get the page displayed
-            for (int p = 1; p < TotalPDFPages; p++)
+            for (int p = 0; p < TotalPDFPages; p++)
             {
                 jWord = -1;
                 SetPBAR(p);
-                if((p % 10) == 0)
+                if ((p % 10) == 0)
                 {
                     tbpageNum.Text = p.ToString();
                 }
@@ -399,7 +465,26 @@ namespace PDF_PhraseFinder
             return true;
         }
 
+        /// <summary>
+        /// use only those phrases that have been selected
+        /// </summary>
         private void FillPhrases()
+        {
+            cPhraseTable cpt;
+            phlist.Clear();
+            for (int i = 0; i < NumPhrases; i++)
+            {
+                cpt = new cPhraseTable();
+                cpt.InitPhrase(InitialPhrase[i], bUsePhrase[i]);
+                phlist.Add(cpt);
+            }
+            dgv_phrases.DataSource = phlist.ToArray();
+        }
+
+        /// <summary>
+        /// Initial setup of phrases, mark all as selected
+        /// </summary>
+        private void FillNewPhrases()
         {
             cPhraseTable cpt;
             phlist.Clear();
@@ -414,12 +499,11 @@ namespace PDF_PhraseFinder
 
         private void btnRunSearch_Click(object sender, EventArgs e)
         {
-            // create the search list used for searching
-            if (bFormDirty)
-            {
-                FillPhrases();
-                bFormDirty = false;
-            }
+            //if (bFormDirty)
+            //{
+            //    FillPhrases();
+            //    bFormDirty = false;
+            //}
             for (int i = 0; i < NumPhrases; i++)
             {
                 WorkingPhrases[i] = cbIgnoreCase.Checked ? phlist[i].strInSeries[0].ToLower() : phlist[i].strInSeries[0];
@@ -435,13 +519,22 @@ namespace PDF_PhraseFinder
         {
             int n = InitialPhrase.Length + 1;
             string[] OldPhrases = new string[n];
+            bool[] bOld = new bool[n];
             WorkingPhrases = new string[n];
             for (int i = 0; i < n - 1; i++)
+            {
                 OldPhrases[i] = InitialPhrase[i];
+                bOld[i] = bUsePhrase[i];
+            }
             InitialPhrase = new string[n];
+            bUsePhrase = new bool[n];
             for (int i = 0; i < n - 1; i++)
+            {
                 InitialPhrase[i] = OldPhrases[i];
+                bUsePhrase[i] = bOld[i];
+            }
             InitialPhrase[n - 1] = "change me then SAVE";
+            bUsePhrase[n - 1] = true;
             NumPhrases = n;
             FillPhrases();
         }
@@ -488,11 +581,11 @@ namespace PDF_PhraseFinder
             Point ThisRC = dgv_phrases.CurrentCellAddress;
             int iRow = ThisRC.Y;
             int iCol = ThisRC.X;
+            iCurrentPage = -1;
             if (phlist[iRow].strPages != "")
             {
                 ThisPageList = phlist[iRow].strPages.Split(',').Select(int.Parse).ToArray();
                 nudPage.Maximum = ThisPageList.Length - 1;
-                iCurrentPage = -1;
                 tbViewPage.Text = ThisPageList[0].ToString();
                 tbViewPage.Visible = ThisPageList.Length > 0;   // only show page number of there are pages
                 if (tbViewPage.Visible)
@@ -508,33 +601,44 @@ namespace PDF_PhraseFinder
 
         private void btnRemove_Click(object sender, EventArgs e)
         {
-            int j = 0, n = 0;
-            for (int i = 0; i < NumPhrases; i++)
-                if (phlist[i].Select)
-                    n++;
+            int n = 0;
+            int i = 0;
+            List<int> KeepList = new List<int>();
+            bool[] bOld;
+            foreach (DataGridViewRow dgvr in dgv_phrases.Rows)
+            {
+                if(dgvr.Selected)
+                {
+                    n++;                     
+                }
+                else KeepList.Add(i);
+                i++;
+            }
             DialogResult dialogResult = MessageBox.Show(
-                "This operation will delete " + n + " filter phrases.  Are you sure?",
-                "Warning: don't forget to save", MessageBoxButtons.YesNo);
-
+    "This operation will delete " + n + " highlighted filter phrases.  Are you sure?",
+    "Warning: don't forget to save", MessageBoxButtons.YesNo);
+            n = NumPhrases - n;
             if (dialogResult == DialogResult.Yes)
             {
-                //remove items from phlist and put into a new InitialPhrase list
-                n = NumPhrases - n; // this many to keep
                 WorkingPhrases = new string[n];
-                for (int i = 0; i < NumPhrases; i++)
+                bOld = new bool[n];
+                i = 0;
+                foreach (int j in KeepList)
                 {
-                    if (!phlist[i].Select)
-                    {
-                        WorkingPhrases[j] = InitialPhrase[i];
-                        j++;
-                    }
+                    WorkingPhrases[i] = InitialPhrase[j];
+                    bOld[i] = bUsePhrase[j];
+                    i++;
                 }
-                InitialPhrase = new string[j];
-                for (int i = 0; i < j; i++)
+                NumPhrases = n;
+                InitialPhrase = new string[n];
+                bUsePhrase = new bool[n];
+                i = 0;
+                foreach(string str in WorkingPhrases)
                 {
-                    InitialPhrase[i] = WorkingPhrases[i];
+                    InitialPhrase[i] = str;
+                    bUsePhrase[i] = bOld[i];
+                    i++;
                 }
-                NumPhrases = j;
                 FillPhrases();
             }
         }
@@ -547,6 +651,7 @@ namespace PDF_PhraseFinder
             {
                 scSavedWords.Add(str1);
             }
+            SavePhraseUsage();
             Properties.Settings.Default.SearchPhrases = scSavedWords;
             Properties.Settings.Default.Save();
         }
@@ -560,6 +665,7 @@ namespace PDF_PhraseFinder
             {
                 string strTemp = phlist[i].Phrase;
                 InitialPhrase[i] = strTemp.Trim();
+                bUsePhrase[i] = phlist[i].Select;
             }
         }
 
@@ -684,7 +790,7 @@ namespace PDF_PhraseFinder
             {
                 InitialPhrase[i] = strReturn[i];
             }
-            FillPhrases();
+            FillNewPhrases();
         }
 
         private void btnStopScan_Click(object sender, EventArgs e)
