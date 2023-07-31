@@ -50,7 +50,7 @@ namespace PDF_PhraseFinder
 
         private bool CheckSyntax()
         {
-            string BadLetters = ".,/|[]{}\\-_=!@#$%^ &*()+`~,./;:'\"";
+            string BadLetters = ".,/|[]{}\\-_=!@#$%^&*()+`~,./;:'\"";
             string strBad = "";
             int n = BadLetters.Length;
             str1 = StrToStrs(tbPhrases.Text);

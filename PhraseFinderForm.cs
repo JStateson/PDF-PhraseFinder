@@ -34,6 +34,7 @@ namespace PDF_PhraseFinder
         private IFields theseFields;
         private bool bFormDirty = false;
         private StringCollection scSavedWords;
+        private string CurrentActivePhrase="";
         private class cLocalSettings         // used to restore user settings
         {
             public bool bExitEarly;             // for debugging or demo purpose only examine a limited number of page
@@ -118,7 +119,7 @@ namespace PDF_PhraseFinder
         //string[] InitialPhrase = new string[NumPhrases] { " prorated ", " lender & grant ", " lender", " grant ", " contract & school & lunches " };
         // the above using "&" was not implementable because I was unable to read a line and know that two words were on the
         // same line.  Since the SDK retrieves whole words there is no need for a space before or after a phrase
-        private string[] InitialPhrase = new string[5] { "and", "address", "make sure", "motherboard", "memory" };
+        private string[] InitialPhrase = new string[5] { "school lunch", "prorated", "contract", "food service", "food" };
         private string[] WorkingPhrases = new string[5]; // same as above but optomises somewhat for case sensitivity
         private bool[] bUsePhrase = new bool[5] { true, true, true, true, true };
         private string strUsePhrase = "11111";
@@ -132,6 +133,8 @@ namespace PDF_PhraseFinder
             int j = sDT.LastIndexOf('.');
             return sDT.Substring(i, j - i);
         }
+
+
         /// <summary>
         /// change string value of 11l01 to true,true,true,false,true
         /// need to tell which phrases are to be used
@@ -160,6 +163,7 @@ namespace PDF_PhraseFinder
 
         /// <summary>
         /// need a bunch of '1' for boolean settings
+        /// cannot save boolean as a property setting so using string of 1 and 0 instead
         /// </summary>
         /// <param name="n"></param>
         /// <returns></returns>
@@ -171,7 +175,9 @@ namespace PDF_PhraseFinder
             return strReturn;
         }
 
-
+        /// <summary>
+        /// entry point for main form
+        /// </summary>
         public PhraseFinderForm()
         {
             InitializeComponent();
@@ -221,6 +227,13 @@ namespace PDF_PhraseFinder
                 " (v) 1.0 (c)Stateson";
         }
 
+
+        /// <summary>
+        /// user click the file open so help them find a pdf and
+        /// report some success or failure
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
@@ -318,6 +331,9 @@ namespace PDF_PhraseFinder
             return chkWord;
         }
 
+        //AcroRd32.exe /A "zoom=50&navpanes=1=OpenActions&search=batch" PdfFile
+        // above search for the phrase "batch"
+
         /// <summary>
         /// Open the PDF using Acrobat (I assume) and position to the current page selected
         /// </summary>
@@ -332,6 +348,7 @@ namespace PDF_PhraseFinder
             ThisDocView = ThisDoc.GetAVPageView() as CAcroAVPageView;
             //ThisDocView.ZoomTo(1 /*AVZoomFitPage*/, 100); // was in an example app, not sure how useful
             ThisDocView.GoTo(iCurrentPage - 1);
+            bool bFound = ThisDoc.FindText(CurrentActivePhrase,0, 0, 0);
         }
 
 
@@ -497,13 +514,15 @@ namespace PDF_PhraseFinder
             dgv_phrases.DataSource = phlist.ToArray();
         }
 
+        private void ClearLastResults()
+        {
+            FillPhrases();
+            tbMatches.Clear(); 
+        }
+
         private void btnRunSearch_Click(object sender, EventArgs e)
         {
-            //if (bFormDirty)
-            //{
-            //    FillPhrases();
-            //    bFormDirty = false;
-            //}
+            ClearLastResults();
             for (int i = 0; i < NumPhrases; i++)
             {
                 WorkingPhrases[i] = cbIgnoreCase.Checked ? phlist[i].strInSeries[0].ToLower() : phlist[i].strInSeries[0];
@@ -591,6 +610,7 @@ namespace PDF_PhraseFinder
                 if (tbViewPage.Visible)
                     iCurrentPage = ThisPageList[0];
                 nudPage.Visible = ThisPageList.Length > 1;      // only show numeric up/down if more than 1 page
+                CurrentActivePhrase = phlist[iRow].Phrase;
             }
         }
 
