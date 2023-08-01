@@ -1,9 +1,12 @@
 
 using Acrobat;
 using AFORMAUTLib;
+using Microsoft.VisualBasic.FileIO;
 using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
+using System.Linq;
+using System.Text;
 
 // data mining PDF appplication
 // copyright 2023, Joseph Stateson  github/jstateson  
@@ -34,8 +37,12 @@ namespace PDF_PhraseFinder
         private IFields theseFields;
         private bool bFormDirty = false;
         private StringCollection scSavedWords;
-        private string CurrentActivePhrase="";
+        private string CurrentActivePhrase = "";
         private int iNullCount = 0;
+        private int iCurrentPagePhraseCount = 0;
+        private int iCurrentPagePhraseActive = 0;
+        private int iCurrentRow = 0;
+        private int[] SrtIndex;
 
         private List<cPhraseTable> phlist = new List<cPhraseTable>();   // table of phrases
         private cLocalSettings LocalSettings = new cLocalSettings();    // table of settings
@@ -321,6 +328,56 @@ namespace PDF_PhraseFinder
             return true;
         }
 
+
+        private void FindMatches(ref string strBig, int j, int p)
+        {
+            string strPhrase = WorkingPhrases[j];
+            int iWidth = strPhrase.Length;
+
+            while (true)
+            {
+                int i = strBig.IndexOf(strPhrase);
+                if (i == -1) return;
+                phlist[j].AddPage(p);
+                phlist[j].IncMatch();
+                strBig = strBig.Remove(i, iWidth);
+            }
+        }
+
+        private void GetFullPage(int p)
+        {
+            string word, strBig = "";
+            int numWords = int.Parse(theseFields.ExecuteThisJavascript("event.value=this.getPageNumWords(" + p + ");"));
+            for (int i = 0; i < numWords; i++)
+            {
+                try
+                {
+                    word = theseFields.ExecuteThisJavascript("event.value=this.getPageNthWord(" + p.ToString() + "," + i.ToString() + ", true);"); ;
+                }
+                catch (Exception e)
+                {
+                    word = "";
+                    iNullCount++;
+                }
+                if (word != null)
+                {
+                    if (cbIgnoreCase.Checked) word = word.ToLower();
+                    strBig += word;
+                }
+                strBig += " ";
+            }
+
+            for (int i = 0; i < NumPhrases; i++)
+            {
+                if (!phlist[i].Select) continue;
+                FindMatches(ref strBig, i, p);
+                //if (strBig.Contains(WorkingPhrases[i]))
+                //{
+                //    phlist[i].IncMatch();
+                //    phlist[i].AddPage(p);
+                //}
+            }
+        }
         // get the next word in the PDF
         private string GetThisWord(int iCurrent, int iLastWord, int iCurrentPage, ref bool bError)
         {
@@ -338,6 +395,24 @@ namespace PDF_PhraseFinder
             return chkWord;
         }
 
+
+        private void ViewSelectedPage()
+        {
+            if (iCurrentPage < 0) return;
+            try
+            {
+                ThisDocView = ThisDoc.GetAVPageView() as CAcroAVPageView;
+                //ThisDocView.ZoomTo(1 /*AVZoomFitPage*/, 100); // was in an example app, not sure how useful
+                ThisDocView.GoTo(iCurrentPage - 1);
+                bool bFound = ThisDoc.FindText(CurrentActivePhrase, cbIgnoreCase.Checked ? 0 : 1, 0, 0);
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+        }
+
         //AcroRd32.exe /A "zoom=50&navpanes=1=OpenActions&search=batch" PdfFile
         // above search for the phrase "batch"
 
@@ -352,72 +427,13 @@ namespace PDF_PhraseFinder
             ThisDoc.Open(fileName, "");
             ThisDoc.BringToFront();
             ThisDoc.SetViewMode(1); // (2)PDUseThumbs
-            ThisDocView = ThisDoc.GetAVPageView() as CAcroAVPageView;
+            //ThisDocView = ThisDoc.GetAVPageView() as CAcroAVPageView;
             //ThisDocView.ZoomTo(1 /*AVZoomFitPage*/, 100); // was in an example app, not sure how useful
             ViewSelectedPage();
         }
 
 
-        /// <summary>
-        /// must have at least 2 letters     thge dash is not returned !!!!!
-        /// WorkingPhrases are only single words, not phrases.  they are in the correct case  to do the matching
-        /// this is to optimize the search as I thought, perhaps wrongly that only a single word was needed
-        /// for actual phrases WorkingPhrase only has the first word the phlist needs to be accessed to
-        /// check additional words that make up the phrase. To do this the document must be read to get
-        /// the additional words.
-        /// </summary>
-        /// <param name="word"></param>
-        /// <param name="iPage"></param>
-        /// <param name="jMax"></param>
-        /// <param name="jWord"></param>
-        /// <param name="bError"></param>
-        /// <returns></returns>
-        private bool bMatchWord(string word, int iPage, int jMax, ref int jWord, ref bool bError)
-        {
-            int n;
-            string strTemp = "";
-            if (word == null) return false;
-            if (word.Length < 2) return false;
-            if (cbIgnoreCase.Checked) word = word.ToLower();
-            for (int i = 0; i < NumPhrases; i++)
-            {
-                if (!phlist[i].Select) continue;
-                if (word == WorkingPhrases[i])
-                {
-                    n = phlist[i].nFollowing;
-                    if (n == 0)
-                    {
-                        phlist[i].IncMatch();
-                        phlist[i].AddPage(iPage);
-                        return true;
-                    }
-                    // need to check the following words of the phrase
-                    // workingphrases do not have the "following words" so had to index into phlist
-                    // was trying to optimise the matching by not haveing to adjust case all the time
-                    // but didnt think this out too clearly so had to use phlist for more than 1 word
-                    for (int j = 0; j < n; j++)
-                    {
-                        jWord++;
-                        if (jWord == jMax) return false; // do not read past the end of the page or ThisDoc
-                        word = GetThisWord(jWord, jMax, iPage, ref bError); //need to peek for the next word
-                        if (bError) return false; // some PDFs are corrupted I discovered
-                        if(word == null)
-                        {
-                            iNullCount++;  // not sure why there are null words ????
-                            continue;
-                        }
-                        if (cbIgnoreCase.Checked) word = word.ToLower();
-                        strTemp = phlist[i].strInSeries[j + 1]; // the phlist first word was already checked
-                        if (cbIgnoreCase.Checked) strTemp = strTemp.ToLower();
-                        if (strTemp != word) return false;
-                    }
-                    phlist[i].IncMatch();
-                    phlist[i].AddPage(iPage);
-                    return true;
-                }
-            }
-            return false;
-        }
+
 
 
         // this starts the search.  note that the file is closed after the search
@@ -447,7 +463,7 @@ namespace PDF_PhraseFinder
             //    substract 1 from page number index to get the page displayed
             for (int p = 0; p < TotalPDFPages; p++)
             {
-                jWord = -1;
+                GetFullPage(p);
                 SetPBAR(p);
                 if ((p % 10) == 0)
                 {
@@ -457,19 +473,6 @@ namespace PDF_PhraseFinder
                 {
                     bStopEarly = false;
                     break;
-                }
-                int numWords = int.Parse(theseFields.ExecuteThisJavascript("event.value=this.getPageNumWords(" + p + ");"));
-                for (int i = 0; i < numWords; i++)
-                {
-                    jWord++;
-                    if (jWord == numWords) break;
-                    chkWord = GetThisWord(jWord, numWords, p, ref bError);
-                    if (bError) return false;
-                    if (bMatchWord(chkWord, p, numWords, ref jWord, ref bError))
-                    {
-                        //found a match and have counted it
-                        if (bError) return false;
-                    }
                 }
             }
             SetPBAR(0);   // clear the progress bar and show results of the pattern search
@@ -482,7 +485,8 @@ namespace PDF_PhraseFinder
                     OutText += "Total Duplicate pages: " + phlist[i].iDupPageCnt + "\r\n\r\n";
                 }
             }
-            tbMatches.Text = "Null words found:" + iNullCount.ToString() + "\r\n";
+            tbMatches.Text = "";
+            if(iNullCount > 0) tbMatches.Text = "Null words found:" + iNullCount.ToString() + "\r\n";
             tbMatches.Text += OutText;
             TotalMatches = GetMatchCount();
             tbTotalMatch.Text = TotalMatches.ToString();
@@ -502,13 +506,14 @@ namespace PDF_PhraseFinder
         {
             cPhraseTable cpt;
             phlist.Clear();
-
+            SortPhrasesList();
             for (int i = 0; i < NumPhrases; i++)
             {
                 cpt = new cPhraseTable();
-                cpt.InitPhrase(InitialPhrase[i], bUsePhrase[i]);
+                cpt.InitPhrase(InitialPhrase[i], bUsePhrase[SrtIndex[i]]);
                 phlist.Add(cpt);
             }
+
             dgv_phrases.DataSource = phlist.ToArray();
         }
 
@@ -531,16 +536,67 @@ namespace PDF_PhraseFinder
         private void ClearLastResults()
         {
             FillPhrases();
-            tbMatches.Clear(); 
+            tbMatches.Clear();
+        }
+
+        private void FormSortList()
+        {
+            SrtIndex = new int[NumPhrases];
+            int[] SrtValue = new int[NumPhrases];
+            int j1, j2, k = NumPhrases - 1;
+            for (int i = 0; i < NumPhrases; ++i)
+            {
+                SrtIndex[i] = i;
+                SrtValue[i] = InitialPhrase[i].Length;
+            }
+            for (int i = 0; i < k; i++)
+            {
+                for (int j = 0; j < k; j++)
+                {
+                    j1 = SrtIndex[j];
+                    j2 = SrtIndex[j + 1];
+                    if (SrtValue[j1] < SrtValue[j2])
+                    {
+                        SrtIndex[j] = j2;
+                        SrtIndex[j + 1] = j1;
+                    }
+                }
+            }
+        }
+
+        private void SortPhrasesList()
+        {
+            int j;
+            string[] pTemp = new string[NumPhrases];
+            FormSortList();
+            for (int i = 0; i < NumPhrases; i++)
+            {
+                j = SrtIndex[i];
+                pTemp[i] = InitialPhrase[j];
+            }
+            for (int i = 0; i < NumPhrases; i++)
+            {
+                InitialPhrase[i] = pTemp[i];
+            }
+        }
+
+        private void FormWorkingFromInitial()
+        {
+
+            for (int i = 0; i < NumPhrases; i++)
+            {
+                WorkingPhrases[i] = cbWholeWord.Checked ? " " : "";
+                string strTemp = cbIgnoreCase.Checked ? InitialPhrase[i].ToLower() : InitialPhrase[i];
+                WorkingPhrases[i] += strTemp.Trim();
+                WorkingPhrases[i] += cbWholeWord.Checked ? " " : "";
+            }
+
         }
 
         private void btnRunSearch_Click(object sender, EventArgs e)
         {
             ClearLastResults();
-            for (int i = 0; i < NumPhrases; i++)
-            {
-                WorkingPhrases[i] = cbIgnoreCase.Checked ? phlist[i].strInSeries[0].ToLower() : phlist[i].strInSeries[0];
-            }
+            FormWorkingFromInitial();
             btnRunSearch.Enabled = false;
             btnStopScan.Enabled = true;
             RunSearch();
@@ -572,38 +628,29 @@ namespace PDF_PhraseFinder
             FillPhrases();
         }
 
-        private void ViewSelectedPage()
-        {
-            if (iCurrentPage < 0) return;
-            try
-            {
-                ThisDocView.GoTo(iCurrentPage - 1);
-                bool bFound = ThisDoc.FindText(CurrentActivePhrase, cbIgnoreCase.Checked ? 0 : 1, 0, 0);
-            }
-            catch (Exception ex)
-            {
-
-            }
-
-        }
-
 
         private void nudPage_ValueChanged(object sender, EventArgs e)
         {
             if (ThisPageList == null) return;
             int iVal = Convert.ToInt32(nudPage.Value);
             iCurrentPage = ThisPageList[iVal];
-            tbViewPage.Text = iCurrentPage.ToString();
-            //ViewDoc(tbViewPage.Text);
-            if (ThisDocView != null)
-            {
-                ViewSelectedPage();
-            }
+            tbViewPage.Text = iCurrentPage.ToString() + ".1";
+            ViewDoc(tbPdfName.Text);
+            iCurrentPagePhraseActive = 0;
+            iCurrentPagePhraseCount = phlist[iCurrentRow].WordsOnPage[Convert.ToInt32(nudPage.Value)];
+            btnNext.Visible = iCurrentPagePhraseCount > 0;
+            return;
         }
 
         private void btnViewDoc_Click(object sender, EventArgs e)
         {
+            tbViewPage.Text = iCurrentPage.ToString() + ".1";
+            iCurrentPagePhraseActive = 0;
+            nudPage.ValueChanged -= nudPage_ValueChanged;
+            nudPage.Value = 0;
+            nudPage.ValueChanged += nudPage_ValueChanged;
             ViewDoc(tbPdfName.Text);
+
         }
 
         /// <summary>
@@ -612,21 +659,23 @@ namespace PDF_PhraseFinder
         /// </summary>
         private void GetSelection()
         {
-            //DataGridViewRow ThisRow = dgv_phrases.CurrentRow;
             Point ThisRC = dgv_phrases.CurrentCellAddress;
-            int iRow = ThisRC.Y;
+            iCurrentRow = ThisRC.Y;
             int iCol = ThisRC.X;
             iCurrentPage = -1;
-            if (phlist[iRow].strPages != "")
+            if (phlist[iCurrentRow].strPages != "")
             {
-                ThisPageList = phlist[iRow].strPages.Split(',').Select(int.Parse).ToArray();
+                ThisPageList = phlist[iCurrentRow].strPages.Split(',').Select(int.Parse).ToArray();
                 nudPage.Maximum = ThisPageList.Length - 1;
-                tbViewPage.Text = ThisPageList[0].ToString();
+                tbViewPage.Text = ThisPageList[0].ToString() + ".1";
                 tbViewPage.Visible = ThisPageList.Length > 0;   // only show page number of there are pages
                 if (tbViewPage.Visible)
                     iCurrentPage = ThisPageList[0];
                 nudPage.Visible = ThisPageList.Length > 1;      // only show numeric up/down if more than 1 page
-                CurrentActivePhrase = phlist[iRow].Phrase;
+                CurrentActivePhrase = phlist[iCurrentRow].Phrase;
+                iCurrentPagePhraseActive = 0;
+                iCurrentPagePhraseCount = phlist[iCurrentRow].WordsOnPage[0]; // [Convert.ToInt32(nudPage.Value)];
+                btnNext.Visible = iCurrentPagePhraseCount > 0;
             }
         }
 
@@ -643,9 +692,9 @@ namespace PDF_PhraseFinder
             bool[] bOld;
             foreach (DataGridViewRow dgvr in dgv_phrases.Rows)
             {
-                if(dgvr.Selected)
+                if (dgvr.Selected)
                 {
-                    n++;                     
+                    n++;
                 }
                 else KeepList.Add(i);
                 i++;
@@ -670,7 +719,7 @@ namespace PDF_PhraseFinder
                 InitialPhrase = new string[n];
                 bUsePhrase = new bool[n];
                 i = 0;
-                foreach(string str in WorkingPhrases)
+                foreach (string str in WorkingPhrases)
                 {
                     InitialPhrase[i] = str;
                     bUsePhrase[i] = bOld[i];
@@ -825,12 +874,34 @@ namespace PDF_PhraseFinder
             {
                 InitialPhrase[i] = strReturn[i];
             }
+            SortPhrasesList();
             FillNewPhrases();
         }
 
         private void btnStopScan_Click(object sender, EventArgs e)
         {
             bStopEarly = true;
+        }
+
+        private void btnNext_Click(object sender, EventArgs e)
+        {
+            if (ThisPageList == null) return;
+            iCurrentPagePhraseActive++;
+            if (iCurrentPagePhraseActive == iCurrentPagePhraseCount)
+            {
+                nudPage.UpButton();
+                return;
+            }
+            tbViewPage.Text = iCurrentPage.ToString() + "." + (1 + iCurrentPagePhraseActive).ToString();
+            if (ThisDocView != null)
+            {
+                ViewSelectedPage();
+            }
+        }
+
+        private void cbIgnoreCase_CheckedChanged_1(object sender, EventArgs e)
+        {
+            LocalSettings.bIgnoreCase = cbIgnoreCase.Checked;
         }
     }
 }

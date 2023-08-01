@@ -45,6 +45,9 @@ namespace PDF_PhraseFinder
             btnAdd = new Button();
             btnRemove = new Button();
             btnSave = new Button();
+            nudPage = new NumericUpDown();
+            btnNext = new Button();
+            cbWholeWord = new CheckBox();
             groupBox1 = new GroupBox();
             groupBox3 = new GroupBox();
             tbTotalMatch = new TextBox();
@@ -58,20 +61,20 @@ namespace PDF_PhraseFinder
             pbarLoading = new ProgressBar();
             btnRunSearch = new Button();
             groupBox6 = new GroupBox();
+            cbIgnoreCase = new CheckBox();
             groupBox9 = new GroupBox();
             btnInvert = new Button();
             btnUncheckall = new Button();
             btnSelectAll = new Button();
-            cbIgnoreCase = new CheckBox();
             groupBox8 = new GroupBox();
             groupBox7 = new GroupBox();
             dgv_phrases = new DataGridView();
             tbMatches = new TextBox();
             gbPageCtrl = new GroupBox();
             tbViewPage = new TextBox();
-            nudPage = new NumericUpDown();
             btnViewDoc = new Button();
             MStrip.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)nudPage).BeginInit();
             groupBox1.SuspendLayout();
             groupBox3.SuspendLayout();
             groupBox2.SuspendLayout();
@@ -83,7 +86,6 @@ namespace PDF_PhraseFinder
             groupBox7.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgv_phrases).BeginInit();
             gbPageCtrl.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)nudPage).BeginInit();
             SuspendLayout();
             // 
             // MStrip
@@ -105,14 +107,14 @@ namespace PDF_PhraseFinder
             // openToolStripMenuItem
             // 
             openToolStripMenuItem.Name = "openToolStripMenuItem";
-            openToolStripMenuItem.Size = new Size(103, 22);
+            openToolStripMenuItem.Size = new Size(180, 22);
             openToolStripMenuItem.Text = "Open";
             openToolStripMenuItem.Click += openToolStripMenuItem_Click;
             // 
             // exitToolStripMenuItem
             // 
             exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            exitToolStripMenuItem.Size = new Size(103, 22);
+            exitToolStripMenuItem.Size = new Size(180, 22);
             exitToolStripMenuItem.Text = "Exit";
             exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
@@ -190,6 +192,40 @@ namespace PDF_PhraseFinder
             toolTip1.SetToolTip(btnSave, "Save in users app data");
             btnSave.UseVisualStyleBackColor = true;
             btnSave.Click += btnSave_Click;
+            // 
+            // nudPage
+            // 
+            nudPage.Location = new Point(132, 44);
+            nudPage.Name = "nudPage";
+            nudPage.Size = new Size(16, 33);
+            nudPage.TabIndex = 1;
+            toolTip1.SetToolTip(nudPage, "changes the page");
+            nudPage.Visible = false;
+            nudPage.ValueChanged += nudPage_ValueChanged;
+            // 
+            // btnNext
+            // 
+            btnNext.Location = new Point(240, 42);
+            btnNext.Name = "btnNext";
+            btnNext.Size = new Size(60, 35);
+            btnNext.TabIndex = 3;
+            btnNext.Text = "next";
+            toolTip1.SetToolTip(btnNext, "next phrase on same page");
+            btnNext.UseVisualStyleBackColor = true;
+            btnNext.Click += btnNext_Click;
+            // 
+            // cbWholeWord
+            // 
+            cbWholeWord.AutoSize = true;
+            cbWholeWord.Checked = true;
+            cbWholeWord.CheckState = CheckState.Checked;
+            cbWholeWord.Location = new Point(28, 95);
+            cbWholeWord.Name = "cbWholeWord";
+            cbWholeWord.Size = new Size(92, 19);
+            cbWholeWord.TabIndex = 6;
+            cbWholeWord.Text = "Whole Word";
+            toolTip1.SetToolTip(cbWholeWord, "adds space before aned after efver phrase");
+            cbWholeWord.UseVisualStyleBackColor = true;
             // 
             // groupBox1
             // 
@@ -308,8 +344,9 @@ namespace PDF_PhraseFinder
             // 
             // groupBox6
             // 
-            groupBox6.Controls.Add(groupBox9);
+            groupBox6.Controls.Add(cbWholeWord);
             groupBox6.Controls.Add(cbIgnoreCase);
+            groupBox6.Controls.Add(groupBox9);
             groupBox6.Controls.Add(groupBox8);
             groupBox6.Controls.Add(groupBox7);
             groupBox6.Controls.Add(dgv_phrases);
@@ -319,6 +356,17 @@ namespace PDF_PhraseFinder
             groupBox6.TabIndex = 4;
             groupBox6.TabStop = false;
             groupBox6.Text = "Phrase Searching";
+            // 
+            // cbIgnoreCase
+            // 
+            cbIgnoreCase.AutoSize = true;
+            cbIgnoreCase.Location = new Point(28, 54);
+            cbIgnoreCase.Name = "cbIgnoreCase";
+            cbIgnoreCase.Size = new Size(88, 19);
+            cbIgnoreCase.TabIndex = 5;
+            cbIgnoreCase.Text = "Ignore Case";
+            cbIgnoreCase.UseVisualStyleBackColor = true;
+            cbIgnoreCase.CheckedChanged += cbIgnoreCase_CheckedChanged_1;
             // 
             // groupBox9
             // 
@@ -361,17 +409,6 @@ namespace PDF_PhraseFinder
             btnSelectAll.Text = "Check All";
             btnSelectAll.UseVisualStyleBackColor = true;
             btnSelectAll.Click += btnSelectAll_Click;
-            // 
-            // cbIgnoreCase
-            // 
-            cbIgnoreCase.AutoSize = true;
-            cbIgnoreCase.Location = new Point(42, 95);
-            cbIgnoreCase.Name = "cbIgnoreCase";
-            cbIgnoreCase.Size = new Size(88, 19);
-            cbIgnoreCase.TabIndex = 3;
-            cbIgnoreCase.Text = "Ignore Case";
-            cbIgnoreCase.UseVisualStyleBackColor = true;
-            cbIgnoreCase.CheckedChanged += cbIgnoreCase_CheckedChanged;
             // 
             // groupBox8
             // 
@@ -418,6 +455,7 @@ namespace PDF_PhraseFinder
             // 
             // gbPageCtrl
             // 
+            gbPageCtrl.Controls.Add(btnNext);
             gbPageCtrl.Controls.Add(tbViewPage);
             gbPageCtrl.Controls.Add(nudPage);
             gbPageCtrl.Controls.Add(btnViewDoc);
@@ -432,20 +470,11 @@ namespace PDF_PhraseFinder
             // 
             // tbViewPage
             // 
-            tbViewPage.Location = new Point(178, 44);
+            tbViewPage.Location = new Point(166, 43);
             tbViewPage.Name = "tbViewPage";
-            tbViewPage.Size = new Size(73, 33);
+            tbViewPage.Size = new Size(56, 33);
             tbViewPage.TabIndex = 2;
             tbViewPage.Visible = false;
-            // 
-            // nudPage
-            // 
-            nudPage.Location = new Point(132, 44);
-            nudPage.Name = "nudPage";
-            nudPage.Size = new Size(16, 33);
-            nudPage.TabIndex = 1;
-            nudPage.Visible = false;
-            nudPage.ValueChanged += nudPage_ValueChanged;
             // 
             // btnViewDoc
             // 
@@ -476,6 +505,7 @@ namespace PDF_PhraseFinder
             FormClosing += PhraseFinderForm_FormClosing;
             MStrip.ResumeLayout(false);
             MStrip.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)nudPage).EndInit();
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();
             groupBox3.ResumeLayout(false);
@@ -493,7 +523,6 @@ namespace PDF_PhraseFinder
             ((System.ComponentModel.ISupportInitialize)dgv_phrases).EndInit();
             gbPageCtrl.ResumeLayout(false);
             gbPageCtrl.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)nudPage).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -524,7 +553,6 @@ namespace PDF_PhraseFinder
         private Button btnImport;
         private Button btnExport;
         private GroupBox groupBox8;
-        private CheckBox cbIgnoreCase;
         private Button btnSave;
         private Button btnRemove;
         private Button btnAdd;
@@ -539,5 +567,8 @@ namespace PDF_PhraseFinder
         private ToolStripMenuItem settingsToolStripMenuItem;
         private Button btnStopScan;
         private TextBox tbpageNum;
+        private Button btnNext;
+        private CheckBox cbWholeWord;
+        private CheckBox cbIgnoreCase;
     }
 }
