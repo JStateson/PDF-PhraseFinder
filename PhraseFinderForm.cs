@@ -43,6 +43,7 @@ namespace PDF_PhraseFinder
         private int iCurrentPagePhraseActive = 0;
         private int iCurrentRow = 0;
         private int[] SrtIndex;
+        private bool[] dgv_ph_CKs;
 
         private List<cPhraseTable> phlist = new List<cPhraseTable>();   // table of phrases
         private cLocalSettings LocalSettings = new cLocalSettings();    // table of settings
@@ -395,7 +396,9 @@ namespace PDF_PhraseFinder
             return chkWord;
         }
 
-
+        /// <summary>
+        /// This function highlights the phrase in  the pdf viewer
+        /// </summary>
         private void ViewSelectedPage()
         {
             if (iCurrentPage < 0) return;
@@ -404,7 +407,10 @@ namespace PDF_PhraseFinder
                 ThisDocView = ThisDoc.GetAVPageView() as CAcroAVPageView;
                 //ThisDocView.ZoomTo(1 /*AVZoomFitPage*/, 100); // was in an example app, not sure how useful
                 ThisDocView.GoTo(iCurrentPage - 1);
-                bool bFound = ThisDoc.FindText(CurrentActivePhrase, cbIgnoreCase.Checked ? 0 : 1, 0, 0);
+                bool bFound = ThisDoc.FindText(CurrentActivePhrase,
+                    cbIgnoreCase.Checked ? 0 : 1,
+                    cbWholeWord.Checked ? 1 : 0,
+                    0);
             }
             catch (Exception ex)
             {
@@ -427,23 +433,42 @@ namespace PDF_PhraseFinder
             ThisDoc.Open(fileName, "");
             ThisDoc.BringToFront();
             ThisDoc.SetViewMode(1); // (2)PDUseThumbs
-            //ThisDocView = ThisDoc.GetAVPageView() as CAcroAVPageView;
-            //ThisDocView.ZoomTo(1 /*AVZoomFitPage*/, 100); // was in an example app, not sure how useful
             ViewSelectedPage();
         }
 
+        private void SavePH_CheckMarks()
+        {
+            dgv_ph_CKs = new bool[NumPhrases];
+            for(int i = 0; i < NumPhrases; i++)
+            {
+                dgv_ph_CKs[i] = dgv_phrases.Rows[i].Cells[0].Selected;
+                phlist[i].Select = dgv_ph_CKs[i];
+            }
+        }
 
 
+        private void RestorePH_CheckMarks()
+        {
+            for (int i = 0; i < NumPhrases; i++)
+            {
+                dgv_phrases.Rows[i].Cells[0].Selected= dgv_ph_CKs[i];
+            }
+        }
 
+        /// <summary>
+        /// Start the search. Unaccountably, checkmarks are all set to true after avDoc is created
+        /// </summary>
+        /// <returns></returns>
 
-        // this starts the search.  note that the file is closed after the search
         private bool RunSearch()
         {
+            string OutText = "";
+            TotalMatches = 0;
+            iNullCount = 0;
             string strPath = tbPdfName.Text;
             AcroAVDocClass avDoc = new AcroAVDocClass();
             IAFormApp formApp = new AFormAppClass();
-            int jWord; // used to check for following words in a phrase match
-            bool bError = false;
+
             try
             {
                 avDoc.Open(strPath, "Title");
@@ -454,13 +479,6 @@ namespace PDF_PhraseFinder
                 tbPdfName.Text = "corrupt pdf:" + tbPdfName.Text;
                 return false;
             }
-            //DocTest(strPath);
-            string OutText = "";
-            string chkWord = "";
-            TotalMatches = 0;
-            iNullCount = 0;
-            //            StreamWriter sw = new StreamWriter(@"D:\java\output.txt", false);
-            //    substract 1 from page number index to get the page displayed
             for (int p = 0; p < TotalPDFPages; p++)
             {
                 GetFullPage(p);
@@ -486,16 +504,17 @@ namespace PDF_PhraseFinder
                 }
             }
             tbMatches.Text = "";
-            if(iNullCount > 0) tbMatches.Text = "Null words found:" + iNullCount.ToString() + "\r\n";
+            if (iNullCount > 0) tbMatches.Text = "Null words found:" + iNullCount.ToString() + "\r\n";
             tbMatches.Text += OutText;
             TotalMatches = GetMatchCount();
             tbTotalMatch.Text = TotalMatches.ToString();
             avDoc.Close(0);
-            avDoc = null;
-            formApp = null;
+            //avDoc = null;
+            //formApp = null;
             dgv_phrases.DataSource = phlist.ToArray(); // connect results to the data grid view widget
             bFormDirty = true;
             gbPageCtrl.Visible = TotalMatches > 0;  // show page control group only if matches found
+            RestorePH_CheckMarks();
             return true;
         }
 
@@ -599,6 +618,7 @@ namespace PDF_PhraseFinder
             FormWorkingFromInitial();
             btnRunSearch.Enabled = false;
             btnStopScan.Enabled = true;
+            SavePH_CheckMarks();
             RunSearch();
             btnRunSearch.Enabled = true;
             btnStopScan.Enabled = false;
@@ -647,7 +667,7 @@ namespace PDF_PhraseFinder
             tbViewPage.Text = iCurrentPage.ToString() + ".1";
             iCurrentPagePhraseActive = 0;
             nudPage.ValueChanged -= nudPage_ValueChanged;
-            nudPage.Value = 0;
+            nudPage.Value = 0;  // cannot let the event fire when resetting the value of the widget
             nudPage.ValueChanged += nudPage_ValueChanged;
             ViewDoc(tbPdfName.Text);
 

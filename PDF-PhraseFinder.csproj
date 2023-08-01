@@ -10,7 +10,6 @@
     <Platforms>AnyCPU;x64</Platforms>
     <StartupObject>PDF_PhraseFinder.Program</StartupObject>
     <ApplicationIcon>usda.ico</ApplicationIcon>
-    <SupportedOSPlatformVersion>8.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <ItemGroup>

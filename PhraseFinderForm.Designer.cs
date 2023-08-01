@@ -107,14 +107,14 @@ namespace PDF_PhraseFinder
             // openToolStripMenuItem
             // 
             openToolStripMenuItem.Name = "openToolStripMenuItem";
-            openToolStripMenuItem.Size = new Size(180, 22);
+            openToolStripMenuItem.Size = new Size(103, 22);
             openToolStripMenuItem.Text = "Open";
             openToolStripMenuItem.Click += openToolStripMenuItem_Click;
             // 
             // exitToolStripMenuItem
             // 
             exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            exitToolStripMenuItem.Size = new Size(180, 22);
+            exitToolStripMenuItem.Size = new Size(103, 22);
             exitToolStripMenuItem.Text = "Exit";
             exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
@@ -441,6 +441,7 @@ namespace PDF_PhraseFinder
             dgv_phrases.RowTemplate.Height = 25;
             dgv_phrases.Size = new Size(344, 309);
             dgv_phrases.TabIndex = 0;
+            toolTip1.SetToolTip(dgv_phrases, "click any row to select a phrase  for page viewing");
             dgv_phrases.Click += dgv_phrases_Click;
             // 
             // tbMatches
