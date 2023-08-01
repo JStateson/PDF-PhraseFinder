@@ -35,6 +35,10 @@ namespace PDF_PhraseFinder
         private bool bFormDirty = false;
         private StringCollection scSavedWords;
         private string CurrentActivePhrase="";
+        private int iNullCount = 0;
+
+        private List<cPhraseTable> phlist = new List<cPhraseTable>();   // table of phrases
+        private cLocalSettings LocalSettings = new cLocalSettings();    // table of settings
         private class cLocalSettings         // used to restore user settings
         {
             public bool bExitEarly;             // for debugging or demo purpose only examine a limited number of page
@@ -42,16 +46,18 @@ namespace PDF_PhraseFinder
             public bool bIgnoreCase = true;
         }
 
+
         private class cPhraseTable
         {
             public bool Select { get; set; }
-            public string? Phrase { get; set; }
-            public string? Number { get; set; }
+            public string Phrase { get; set; }
+            public string Number { get; set; }
             public int iNumber;
             public int iDupPageCnt;
             public int iLastPage;
             public string strPages = "";
-            public string[]? strInSeries;
+            public string[] strInSeries;
+            public List<int> WordsOnPage = new List<int>();
             public int nFollowing; // number of words to check in sequence
 
             // count the number of following words that must match
@@ -94,15 +100,18 @@ namespace PDF_PhraseFinder
                 {
                     strPages = iPage.ToString();
                     iLastPage = iPage;
+                    WordsOnPage.Add(1);
                 }
                 else
                 {
                     if (iLastPage == iPage)
                     {
                         iDupPageCnt++;
+                        WordsOnPage[^1]++;  // increment the last page count
                         return;
                     }
                     strPages += "," + iPage.ToString();
+                    WordsOnPage.Add(1);
                     iLastPage = iPage;
                 }
             }
@@ -112,8 +121,6 @@ namespace PDF_PhraseFinder
             }
         }
 
-        private List<cPhraseTable> phlist = new List<cPhraseTable>();   // table of phrases
-        private cLocalSettings LocalSettings = new cLocalSettings();    // table of settings
 
 
         //string[] InitialPhrase = new string[NumPhrases] { " prorated ", " lender & grant ", " lender", " grant ", " contract & school & lunches " };
@@ -344,11 +351,10 @@ namespace PDF_PhraseFinder
             ThisDoc = new AcroAVDoc();
             ThisDoc.Open(fileName, "");
             ThisDoc.BringToFront();
-            ThisDoc.SetViewMode(2); // PDUseThumbs
+            ThisDoc.SetViewMode(1); // (2)PDUseThumbs
             ThisDocView = ThisDoc.GetAVPageView() as CAcroAVPageView;
             //ThisDocView.ZoomTo(1 /*AVZoomFitPage*/, 100); // was in an example app, not sure how useful
-            ThisDocView.GoTo(iCurrentPage - 1);
-            bool bFound = ThisDoc.FindText(CurrentActivePhrase,0, 0, 0);
+            ViewSelectedPage();
         }
 
 
@@ -395,6 +401,11 @@ namespace PDF_PhraseFinder
                         if (jWord == jMax) return false; // do not read past the end of the page or ThisDoc
                         word = GetThisWord(jWord, jMax, iPage, ref bError); //need to peek for the next word
                         if (bError) return false; // some PDFs are corrupted I discovered
+                        if(word == null)
+                        {
+                            iNullCount++;  // not sure why there are null words ????
+                            continue;
+                        }
                         if (cbIgnoreCase.Checked) word = word.ToLower();
                         strTemp = phlist[i].strInSeries[j + 1]; // the phlist first word was already checked
                         if (cbIgnoreCase.Checked) strTemp = strTemp.ToLower();
@@ -431,6 +442,7 @@ namespace PDF_PhraseFinder
             string OutText = "";
             string chkWord = "";
             TotalMatches = 0;
+            iNullCount = 0;
             //            StreamWriter sw = new StreamWriter(@"D:\java\output.txt", false);
             //    substract 1 from page number index to get the page displayed
             for (int p = 0; p < TotalPDFPages; p++)
@@ -470,7 +482,8 @@ namespace PDF_PhraseFinder
                     OutText += "Total Duplicate pages: " + phlist[i].iDupPageCnt + "\r\n\r\n";
                 }
             }
-            tbMatches.Text = OutText;
+            tbMatches.Text = "Null words found:" + iNullCount.ToString() + "\r\n";
+            tbMatches.Text += OutText;
             TotalMatches = GetMatchCount();
             tbTotalMatch.Text = TotalMatches.ToString();
             avDoc.Close(0);
@@ -489,6 +502,7 @@ namespace PDF_PhraseFinder
         {
             cPhraseTable cpt;
             phlist.Clear();
+
             for (int i = 0; i < NumPhrases; i++)
             {
                 cpt = new cPhraseTable();
@@ -564,10 +578,11 @@ namespace PDF_PhraseFinder
             try
             {
                 ThisDocView.GoTo(iCurrentPage - 1);
+                bool bFound = ThisDoc.FindText(CurrentActivePhrase, cbIgnoreCase.Checked ? 0 : 1, 0, 0);
             }
-            catch
+            catch (Exception ex)
             {
-                // page probably closed by user: they can re-open it
+
             }
 
         }
@@ -579,6 +594,7 @@ namespace PDF_PhraseFinder
             int iVal = Convert.ToInt32(nudPage.Value);
             iCurrentPage = ThisPageList[iVal];
             tbViewPage.Text = iCurrentPage.ToString();
+            //ViewDoc(tbViewPage.Text);
             if (ThisDocView != null)
             {
                 ViewSelectedPage();
@@ -747,8 +763,6 @@ namespace PDF_PhraseFinder
         private void PhraseFinderForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             SaveLocalSettings();
-            if (ThisDoc != null)
-                ThisDoc.Close(0);
         }
 
 
