@@ -236,8 +236,8 @@ namespace PDF_PhraseFinder
             }
             Properties.Settings.Default.UsePhrase = strUsePhrase;
             SetPhraseUsage();
-            FillPhrases();
             GetLocalSettings();
+            FillPhrases();
             tbPdfName.Text = "Build date: " + GetSimpleDate(Properties.Resources.BuildDate) +
                 " (v) 1.0 (c)Stateson";
         }
@@ -345,7 +345,7 @@ namespace PDF_PhraseFinder
             }
         }
 
-        private void GetFullPage(int p)
+        private void SearchThisFullPage(int p)
         {
             string word, strBig = "";
             int numWords = int.Parse(theseFields.ExecuteThisJavascript("event.value=this.getPageNumWords(" + p + ");"));
@@ -370,13 +370,8 @@ namespace PDF_PhraseFinder
 
             for (int i = 0; i < NumPhrases; i++)
             {
-                if (!phlist[i].Select) continue;
+                if (!dgv_ph_CKs[i]) continue;  // need to use the checkboxes, not phlist
                 FindMatches(ref strBig, i, p);
-                //if (strBig.Contains(WorkingPhrases[i]))
-                //{
-                //    phlist[i].IncMatch();
-                //    phlist[i].AddPage(p);
-                //}
             }
         }
         // get the next word in the PDF
@@ -439,9 +434,9 @@ namespace PDF_PhraseFinder
         private void SavePH_CheckMarks()
         {
             dgv_ph_CKs = new bool[NumPhrases];
-            for(int i = 0; i < NumPhrases; i++)
+            for (int i = 0; i < NumPhrases; i++)
             {
-                dgv_ph_CKs[i] = dgv_phrases.Rows[i].Cells[0].Selected;
+                dgv_ph_CKs[i] = Convert.ToBoolean(dgv_phrases.Rows[i].Cells[0].Value);
                 phlist[i].Select = dgv_ph_CKs[i];
             }
         }
@@ -451,7 +446,7 @@ namespace PDF_PhraseFinder
         {
             for (int i = 0; i < NumPhrases; i++)
             {
-                dgv_phrases.Rows[i].Cells[0].Selected= dgv_ph_CKs[i];
+                dgv_phrases.Rows[i].Cells[0].Value = dgv_ph_CKs[i];
             }
         }
 
@@ -481,7 +476,7 @@ namespace PDF_PhraseFinder
             }
             for (int p = 0; p < TotalPDFPages; p++)
             {
-                GetFullPage(p);
+                SearchThisFullPage(p);
                 SetPBAR(p);
                 if ((p % 10) == 0)
                 {
@@ -554,7 +549,23 @@ namespace PDF_PhraseFinder
 
         private void ClearLastResults()
         {
-            FillPhrases();
+            //FillPhrases(); this has side effects and erases the checkboxes
+            int i = 0;
+            cPhraseTable cpt;
+            foreach (DataGridViewRow row in dgv_phrases.Rows)
+            {
+                row.Cells[2].Value = "";
+                cpt = phlist[i];
+                cpt.Number = "";
+                cpt.nFollowing = 0;
+                cpt.iNumber = 0;
+                cpt.iDupPageCnt = 0;
+                cpt.iLastPage = 0;
+                cpt.strPages = "";
+                cpt.nFollowing = 0;
+                cpt.WordsOnPage.Clear();
+                i++;
+            }
             tbMatches.Clear();
         }
 
@@ -579,7 +590,7 @@ namespace PDF_PhraseFinder
                         SrtIndex[j] = j2;
                         SrtIndex[j + 1] = j1;
                     }
-                }
+                }   
             }
         }
 
@@ -778,6 +789,7 @@ namespace PDF_PhraseFinder
         private void btnSave_Click(object sender, EventArgs e)
         {
             UpdateSettings();
+            SavePH_CheckMarks();
             SaveSettings();
         }
 

@@ -48,6 +48,7 @@ namespace PDF_PhraseFinder
             nudPage = new NumericUpDown();
             btnNext = new Button();
             cbWholeWord = new CheckBox();
+            dgv_phrases = new DataGridView();
             groupBox1 = new GroupBox();
             groupBox3 = new GroupBox();
             tbTotalMatch = new TextBox();
@@ -68,13 +69,13 @@ namespace PDF_PhraseFinder
             btnSelectAll = new Button();
             groupBox8 = new GroupBox();
             groupBox7 = new GroupBox();
-            dgv_phrases = new DataGridView();
             tbMatches = new TextBox();
             gbPageCtrl = new GroupBox();
             tbViewPage = new TextBox();
             btnViewDoc = new Button();
             MStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)nudPage).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)dgv_phrases).BeginInit();
             groupBox1.SuspendLayout();
             groupBox3.SuspendLayout();
             groupBox2.SuspendLayout();
@@ -84,7 +85,6 @@ namespace PDF_PhraseFinder
             groupBox9.SuspendLayout();
             groupBox8.SuspendLayout();
             groupBox7.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)dgv_phrases).BeginInit();
             gbPageCtrl.SuspendLayout();
             SuspendLayout();
             // 
@@ -226,6 +226,17 @@ namespace PDF_PhraseFinder
             cbWholeWord.Text = "Whole Word";
             toolTip1.SetToolTip(cbWholeWord, "adds space before aned after efver phrase");
             cbWholeWord.UseVisualStyleBackColor = true;
+            // 
+            // dgv_phrases
+            // 
+            dgv_phrases.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgv_phrases.Location = new Point(413, 31);
+            dgv_phrases.Name = "dgv_phrases";
+            dgv_phrases.RowTemplate.Height = 25;
+            dgv_phrases.Size = new Size(344, 309);
+            dgv_phrases.TabIndex = 0;
+            toolTip1.SetToolTip(dgv_phrases, "click any row to select a phrase  for page viewing");
+            dgv_phrases.Click += dgv_phrases_Click;
             // 
             // groupBox1
             // 
@@ -433,17 +444,6 @@ namespace PDF_PhraseFinder
             groupBox7.TabStop = false;
             groupBox7.Text = "Clikpboard";
             // 
-            // dgv_phrases
-            // 
-            dgv_phrases.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgv_phrases.Location = new Point(413, 31);
-            dgv_phrases.Name = "dgv_phrases";
-            dgv_phrases.RowTemplate.Height = 25;
-            dgv_phrases.Size = new Size(344, 309);
-            dgv_phrases.TabIndex = 0;
-            toolTip1.SetToolTip(dgv_phrases, "click any row to select a phrase  for page viewing");
-            dgv_phrases.Click += dgv_phrases_Click;
-            // 
             // tbMatches
             // 
             tbMatches.BorderStyle = BorderStyle.FixedSingle;
@@ -499,7 +499,7 @@ namespace PDF_PhraseFinder
             Controls.Add(groupBox5);
             Controls.Add(groupBox1);
             Controls.Add(MStrip);
-            FormBorderStyle = FormBorderStyle.Fixed3D;
+            FormBorderStyle = FormBorderStyle.FixedToolWindow;
             MainMenuStrip = MStrip;
             Name = "PhraseFinderForm";
             Text = "USDA / FNS";
@@ -507,6 +507,7 @@ namespace PDF_PhraseFinder
             MStrip.ResumeLayout(false);
             MStrip.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)nudPage).EndInit();
+            ((System.ComponentModel.ISupportInitialize)dgv_phrases).EndInit();
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();
             groupBox3.ResumeLayout(false);
@@ -521,7 +522,6 @@ namespace PDF_PhraseFinder
             groupBox9.ResumeLayout(false);
             groupBox8.ResumeLayout(false);
             groupBox7.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)dgv_phrases).EndInit();
             gbPageCtrl.ResumeLayout(false);
             gbPageCtrl.PerformLayout();
             ResumeLayout(false);
