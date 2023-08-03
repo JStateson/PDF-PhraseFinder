@@ -130,14 +130,10 @@ namespace PDF_PhraseFinder
         }
 
 
-
-        //string[] InitialPhrase = new string[NumPhrases] { " prorated ", " lender & grant ", " lender", " grant ", " contract & school & lunches " };
-        // the above using "&" was not implementable because I was unable to read a line and know that two words were on the
-        // same line.  Since the SDK retrieves whole words there is no need for a space before or after a phrase
-        private string[] InitialPhrase = new string[5] { "school lunch", "prorated", "contract", "food service", "food" };
+        private string[] InitialPhrase = new string[5] { "school lunch", "Civil Rights", "contract", "food service", "fixed price" };
         private string[] WorkingPhrases = new string[5]; // same as above but optomises somewhat for case sensitivity
         private bool[] bUsePhrase = new bool[5] { true, true, true, true, true };
-        private string strUsePhrase = "11111";
+        private string strUsePhrase = "11111"; // this string is saved in settings as I was unable to figure out how to save bool[]
 
         //show a simple date on the form
         private string GetSimpleDate(string sDT)
@@ -527,8 +523,10 @@ namespace PDF_PhraseFinder
                 cpt.InitPhrase(InitialPhrase[i], bUsePhrase[SrtIndex[i]]);
                 phlist.Add(cpt);
             }
-
             dgv_phrases.DataSource = phlist.ToArray();
+            //MessageBox.Show("Got this far?");  // used for debugging an internal fault .NET7 ???
+            //problem does not occur anymore
+            //https://learn.microsoft.com/en-us/answers/questions/1340009/indexoutofrangeexception-but-error-occurs-only-for
         }
 
         /// <summary>
