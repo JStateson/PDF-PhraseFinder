@@ -134,10 +134,11 @@
                     ONCE THE DOCUMENT IS OPENED
 
 
-
            Adobe PRO or Standard MUST be instaleld and
            you MUST have logged in and run through the
           startup and introduction phase.  This application
-           will not log you into Adobe</value>
+           will not log you into Adobe.  If you cannot run
+           Adobe Acrobat then this app will  fail after 30
+           or more seconds.</value>
   </data>
 </root>

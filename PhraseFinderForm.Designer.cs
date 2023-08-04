@@ -215,7 +215,7 @@ namespace PDF_PhraseFinder
             btnNext.Size = new Size(126, 35);
             btnNext.TabIndex = 3;
             btnNext.Text = "Next Phrase";
-            toolTip1.SetToolTip(btnNext, "next phrase on same page");
+            toolTip1.SetToolTip(btnNext, "next phrase on any found page");
             btnNext.UseVisualStyleBackColor = true;
             btnNext.Visible = false;
             btnNext.Click += btnNext_Click;
@@ -250,7 +250,7 @@ namespace PDF_PhraseFinder
             tbZoomPCT.Name = "tbZoomPCT";
             tbZoomPCT.Size = new Size(33, 23);
             tbZoomPCT.TabIndex = 7;
-            tbZoomPCT.Text = "75";
+            tbZoomPCT.Text = "100";
             toolTip1.SetToolTip(tbZoomPCT, "PDF zoom percent");
             // 
             // groupBox1
@@ -408,6 +408,8 @@ namespace PDF_PhraseFinder
             // cbIgnoreCase
             // 
             cbIgnoreCase.AutoSize = true;
+            cbIgnoreCase.Checked = true;
+            cbIgnoreCase.CheckState = CheckState.Checked;
             cbIgnoreCase.Location = new Point(22, 23);
             cbIgnoreCase.Name = "cbIgnoreCase";
             cbIgnoreCase.Size = new Size(88, 19);
@@ -480,6 +482,7 @@ namespace PDF_PhraseFinder
             groupBox7.TabIndex = 1;
             groupBox7.TabStop = false;
             groupBox7.Text = "Clikpboard";
+            toolTip1.SetToolTip(groupBox7, "Use setting instead");
             // 
             // tbMatches
             // 
@@ -505,6 +508,7 @@ namespace PDF_PhraseFinder
             gbPageCtrl.TabIndex = 6;
             gbPageCtrl.TabStop = false;
             gbPageCtrl.Text = "Page View Control (page/word)";
+            toolTip1.SetToolTip(gbPageCtrl, "Display the next or the previous\r\npage that had the phrase");
             gbPageCtrl.Visible = false;
             // 
             // tbViewPage
