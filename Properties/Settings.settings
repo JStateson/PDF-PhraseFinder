@@ -11,8 +11,11 @@
     <Setting Name="bIgnoreCase" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="UsePhrase" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
+    <Setting Name="PDFZoomInx" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="PDFZoomPCT" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">100</Value>
     </Setting>
   </Settings>
 </SettingsFile>

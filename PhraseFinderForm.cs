@@ -7,6 +7,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using System.Linq;
 using System.Text;
+using System.ComponentModel;
+using System.Configuration;
 
 // data mining PDF appplication
 // copyright 2023, Joseph Stateson  github/jstateson  
@@ -15,9 +17,8 @@ using System.Text;
  * must add references to adobe and set imbed to false or no
  * must select application and select settings to create settings.settings
  * had to select os 8, not 10.  not sure why sdk is missing???
- * copy BuildDate.txt and usda.ico in resources.resx
- * add this phrase to pre-build event: echo %date% %time% > "$(ProjectDir)\BuildDate.txt"
-
+ * copy usda.ico in resources.resx
+ * 8/4/2023 adding "0:" or "1:" prefix to phrase to indicated if it was checked or not
  */
 
 namespace PDF_PhraseFinder
@@ -43,7 +44,7 @@ namespace PDF_PhraseFinder
         private int iCurrentPagePhraseActive = 0;
         private int iCurrentRow = 0;
         private int[] SrtIndex;
-        private bool[] dgv_ph_CKs;
+
 
         private List<cPhraseTable> phlist = new List<cPhraseTable>();   // table of phrases
         private cLocalSettings LocalSettings = new cLocalSettings();    // table of settings
@@ -52,6 +53,8 @@ namespace PDF_PhraseFinder
             public bool bExitEarly;             // for debugging or demo purpose only examine a limited number of page
             public string strLastFolder = "";     // where last PDF was obtained
             public bool bIgnoreCase = true;
+            public int PDFZoomPCT = 75; // percent but not used unless inx correlelates
+            public int PDFZoomInx = 1;  // AVZoomFitPage
         }
 
 
@@ -133,7 +136,6 @@ namespace PDF_PhraseFinder
         private string[] InitialPhrase = new string[5] { "school lunch", "Civil Rights", "contract", "food service", "fixed price" };
         private string[] WorkingPhrases = new string[5]; // same as above but optomises somewhat for case sensitivity
         private bool[] bUsePhrase = new bool[5] { true, true, true, true, true };
-        private string strUsePhrase = "11111"; // this string is saved in settings as I was unable to figure out how to save bool[]
 
         //show a simple date on the form
         private string GetSimpleDate(string sDT)
@@ -146,45 +148,61 @@ namespace PDF_PhraseFinder
         }
 
 
-        /// <summary>
-        /// change string value of 11l01 to true,true,true,false,true
-        /// need to tell which phrases are to be used
-        /// </summary>
-        private void SetPhraseUsage()
+
+        private bool ObtainProjectSettings()
         {
-            int n = strUsePhrase.Length;
-            bUsePhrase = new bool[n];
-            for (int i = 0; i < n; i++)
+            int n = 0;  // any setttings?
+            int i, j;
+            string[] SavedSettings;
+            scSavedWords = new StringCollection();
+            if (null != Properties.Settings.Default.SearchPhrases)
+                n = Properties.Settings.Default.SearchPhrases.Count;
+            if (n > 0)
             {
-                bUsePhrase[i] = strUsePhrase.Substring(i, 1) == "1";
+                SavedSettings = new string[Properties.Settings.Default.SearchPhrases.Count];
+                Properties.Settings.Default.SearchPhrases.CopyTo(SavedSettings, 0);
+                scSavedWords.AddRange(SavedSettings);
+                InitialPhrase = new string[n];
+                WorkingPhrases = new string[n];
+                bUsePhrase = new bool[n];
+                NumPhrases = n;
+                j = 0;
+                foreach (string str in scSavedWords)
+                {
+                    i = str.Length;
+                    if (i < 3) return false;    // cannot be this small
+                    i = str.IndexOf(":");   // expecting 0: or 1:
+                    if (i < 0)
+                    {   // if missing then set checkmark
+                        bUsePhrase[j] = true;
+                        InitialPhrase[j] = str;
+                    }
+                    else
+                    {
+                        bUsePhrase[j] = "1" == str.Substring(0, 1);
+                        InitialPhrase[j] = str.Substring(2);
+                    }
+                    j++;
+                }
             }
-        }
-        /// <summary>
-        /// change bool to string of 0 or 1
-        /// </summary>
-        private void SavePhraseUsage()
-        {
-            strUsePhrase = "";
-            foreach (bool b in bUsePhrase)
+            else
             {
-                strUsePhrase += b ? "1" : "0";
+                // there are no setting so write them out using the program defaults
+                // this is only done once to get the checkbox value written to settings
+                NumPhrases = InitialPhrase.Length;
+                i = 0;
+                foreach (string str in InitialPhrase)
+                {
+                    scSavedWords.Add((bUsePhrase[i] ? "1:" : "0:") + str);
+                    i++;
+                }
+                Properties.Settings.Default.SearchPhrases = scSavedWords;
+                Properties.Settings.Default.Save();
             }
-            Properties.Settings.Default.UsePhrase = strUsePhrase;
+            return true;
         }
 
-        /// <summary>
-        /// need a bunch of '1' for boolean settings
-        /// cannot save boolean as a property setting so using string of 1 and 0 instead
-        /// </summary>
-        /// <param name="n"></param>
-        /// <returns></returns>
-        private string PadTrue(int n)
-        {
-            string strReturn = "";
-            for (int i = 0; i < n; i++)
-                strReturn += "1";
-            return strReturn;
-        }
+
 
         /// <summary>
         /// entry point for main form
@@ -201,41 +219,10 @@ namespace PDF_PhraseFinder
                 MessageBox.Show("Adobe PRO or STANDARD is not present");
                 this.Close();
             }
-            scSavedWords = new StringCollection();
-            int n = 0;
-            if (null != Properties.Settings.Default.SearchPhrases)
-                n = Properties.Settings.Default.SearchPhrases.Count;
-            if (n > 0)
-            {
-                string[] tempArr = new string[Properties.Settings.Default.SearchPhrases.Count];
-                Properties.Settings.Default.SearchPhrases.CopyTo(tempArr, 0);
-                scSavedWords.AddRange(tempArr);
-                InitialPhrase = new string[n];
-                WorkingPhrases = new string[n];
-                NumPhrases = n;
-                for (int i = 0; i < n; i++)
-                {
-                    InitialPhrase[i] = scSavedWords[i];
-                }
-            }
-            else
-            {
-                SaveSettings();
-            }
-            if ("" != Properties.Settings.Default.UsePhrase)
-            {
-                strUsePhrase = Properties.Settings.Default.UsePhrase;
-                if (NumPhrases != strUsePhrase.Length)
-                {
-                    strUsePhrase = PadTrue(NumPhrases);
-                }
-            }
-            Properties.Settings.Default.UsePhrase = strUsePhrase;
-            SetPhraseUsage();
+            ObtainProjectSettings();
             GetLocalSettings();
             FillPhrases();
-            tbPdfName.Text = "Build date: " + GetSimpleDate(Properties.Resources.BuildDate) +
-                " (v) 1.0 (c)Stateson";
+            tbPdfName.Text = " (v) 1.0 (c)Stateson";
         }
 
 
@@ -268,6 +255,7 @@ namespace PDF_PhraseFinder
             }
             // enable the run button if a docuement was loaded
             btnRunSearch.Enabled = bOpenDocs(tbPdfName.Text);
+            gbPageCtrl.Visible = true;
         }
 
         /// <summary>
@@ -366,8 +354,8 @@ namespace PDF_PhraseFinder
 
             for (int i = 0; i < NumPhrases; i++)
             {
-                if (!dgv_ph_CKs[i]) continue;  // need to use the checkboxes, not phlist
-                FindMatches(ref strBig, i, p);
+                if (phlist[i].Select)
+                    FindMatches(ref strBig, i, p);
             }
         }
         // get the next word in the PDF
@@ -389,14 +377,25 @@ namespace PDF_PhraseFinder
 
         /// <summary>
         /// This function highlights the phrase in  the pdf viewer
+        /*
+            '0 = AVZoomNoVary
+            '1 = AVZoomFitPage
+            '2 = AVZoomFitWidth
+            '3 = AVZoomFitHeight
+            '4 = AVZoomFitVisibleWidth
+            '5 = AVZoomPreferred
+        */
         /// </summary>
         private void ViewSelectedPage()
         {
             if (iCurrentPage < 0) return;
+            Int16 pctValue = Convert.ToInt16(tbZoomPCT.Text); //probably need to "try" this conversion as user may type garbage in text box
+            Int16 inxValue = Convert.ToInt16(cbZoom.SelectedIndex);
+            if (pctValue < 0 || pctValue > 100) pctValue = 75;
             try
             {
                 ThisDocView = ThisDoc.GetAVPageView() as CAcroAVPageView;
-                //ThisDocView.ZoomTo(1 /*AVZoomFitPage*/, 100); // was in an example app, not sure how useful
+                ThisDocView.ZoomTo(inxValue, pctValue);
                 ThisDocView.GoTo(iCurrentPage - 1);
                 bool bFound = ThisDoc.FindText(CurrentActivePhrase,
                     cbIgnoreCase.Checked ? 0 : 1,
@@ -426,30 +425,6 @@ namespace PDF_PhraseFinder
             ThisDoc.SetViewMode(1); // (2)PDUseThumbs
             ViewSelectedPage();
         }
-
-        private void SavePH_CheckMarks()
-        {
-            dgv_ph_CKs = new bool[NumPhrases];
-            for (int i = 0; i < NumPhrases; i++)
-            {
-                dgv_ph_CKs[i] = Convert.ToBoolean(dgv_phrases.Rows[i].Cells[0].Value);
-                phlist[i].Select = dgv_ph_CKs[i];
-            }
-        }
-
-
-        private void RestorePH_CheckMarks()
-        {
-            for (int i = 0; i < NumPhrases; i++)
-            {
-                dgv_phrases.Rows[i].Cells[0].Value = dgv_ph_CKs[i];
-            }
-        }
-
-        /// <summary>
-        /// Start the search. Unaccountably, checkmarks are all set to true after avDoc is created
-        /// </summary>
-        /// <returns></returns>
 
         private bool RunSearch()
         {
@@ -504,8 +479,6 @@ namespace PDF_PhraseFinder
             //formApp = null;
             dgv_phrases.DataSource = phlist.ToArray(); // connect results to the data grid view widget
             bFormDirty = true;
-            gbPageCtrl.Visible = TotalMatches > 0;  // show page control group only if matches found
-            RestorePH_CheckMarks();
             return true;
         }
 
@@ -520,7 +493,7 @@ namespace PDF_PhraseFinder
             for (int i = 0; i < NumPhrases; i++)
             {
                 cpt = new cPhraseTable();
-                cpt.InitPhrase(InitialPhrase[i], bUsePhrase[SrtIndex[i]]);
+                cpt.InitPhrase(InitialPhrase[i], bUsePhrase[i]);
                 phlist.Add(cpt);
             }
             dgv_phrases.DataSource = phlist.ToArray();
@@ -567,7 +540,7 @@ namespace PDF_PhraseFinder
             tbMatches.Clear();
         }
 
-        private void FormSortList()
+        private void FormSortIndex()
         {
             SrtIndex = new int[NumPhrases];
             int[] SrtValue = new int[NumPhrases];
@@ -588,7 +561,7 @@ namespace PDF_PhraseFinder
                         SrtIndex[j] = j2;
                         SrtIndex[j + 1] = j1;
                     }
-                }   
+                }
             }
         }
 
@@ -596,15 +569,18 @@ namespace PDF_PhraseFinder
         {
             int j;
             string[] pTemp = new string[NumPhrases];
-            FormSortList();
+            bool[] bTemp = new bool[NumPhrases];
+            FormSortIndex();
             for (int i = 0; i < NumPhrases; i++)
             {
                 j = SrtIndex[i];
                 pTemp[i] = InitialPhrase[j];
+                bTemp[i] = bUsePhrase[j];
             }
             for (int i = 0; i < NumPhrases; i++)
             {
                 InitialPhrase[i] = pTemp[i];
+                bUsePhrase[i] = bTemp[i];
             }
         }
 
@@ -627,7 +603,6 @@ namespace PDF_PhraseFinder
             FormWorkingFromInitial();
             btnRunSearch.Enabled = false;
             btnStopScan.Enabled = true;
-            SavePH_CheckMarks();
             RunSearch();
             btnRunSearch.Enabled = true;
             btnStopScan.Enabled = false;
@@ -663,7 +638,7 @@ namespace PDF_PhraseFinder
             if (ThisPageList == null) return;
             int iVal = Convert.ToInt32(nudPage.Value);
             iCurrentPage = ThisPageList[iVal];
-            tbViewPage.Text = iCurrentPage.ToString() + ".1";
+            tbViewPage.Text = iCurrentPage.ToString();
             ViewDoc(tbPdfName.Text);
             iCurrentPagePhraseActive = 0;
             iCurrentPagePhraseCount = phlist[iCurrentRow].WordsOnPage[Convert.ToInt32(nudPage.Value)];
@@ -673,13 +648,20 @@ namespace PDF_PhraseFinder
 
         private void btnViewDoc_Click(object sender, EventArgs e)
         {
-            tbViewPage.Text = iCurrentPage.ToString() + ".1";
-            iCurrentPagePhraseActive = 0;
+            ViewDoc(tbPdfName.Text);
+        }
+
+
+        private void SetNumeric_UpDn_Page()
+        {
+            nudPage.Maximum = ThisPageList.Length - 1;
+            nudPage.Visible = ThisPageList.Length > 1;      // only show numeric up/down if more than 1 page
+            btnNext.Visible = iCurrentPagePhraseCount > 0;
+            // cannot let the event fire when resetting the value of the widget
             nudPage.ValueChanged -= nudPage_ValueChanged;
-            nudPage.Value = 0;  // cannot let the event fire when resetting the value of the widget
+            nudPage.Value = 0;
             nudPage.ValueChanged += nudPage_ValueChanged;
             ViewDoc(tbPdfName.Text);
-
         }
 
         /// <summary>
@@ -695,16 +677,13 @@ namespace PDF_PhraseFinder
             if (phlist[iCurrentRow].strPages != "")
             {
                 ThisPageList = phlist[iCurrentRow].strPages.Split(',').Select(int.Parse).ToArray();
-                nudPage.Maximum = ThisPageList.Length - 1;
-                tbViewPage.Text = ThisPageList[0].ToString() + ".1";
-                tbViewPage.Visible = ThisPageList.Length > 0;   // only show page number of there are pages
-                if (tbViewPage.Visible)
-                    iCurrentPage = ThisPageList[0];
-                nudPage.Visible = ThisPageList.Length > 1;      // only show numeric up/down if more than 1 page
+                iCurrentPage = ThisPageList[0];
+                tbViewPage.Text = iCurrentPage.ToString();
                 CurrentActivePhrase = phlist[iCurrentRow].Phrase;
-                iCurrentPagePhraseActive = 0;
-                iCurrentPagePhraseCount = phlist[iCurrentRow].WordsOnPage[0]; // [Convert.ToInt32(nudPage.Value)];
-                btnNext.Visible = iCurrentPagePhraseCount > 0;
+                iCurrentPagePhraseActive = 0; // start of first (at least one) phrase found on the page
+                iCurrentPagePhraseCount = phlist[iCurrentRow].WordsOnPage[0];
+                SetNumeric_UpDn_Page();
+                AllowNextPhrase();
             }
         }
 
@@ -761,12 +740,12 @@ namespace PDF_PhraseFinder
         private void SaveSettings()
         {
             // should be at AppData\Local\Microsoft\YOUR APPLICATION NAME File name is user.config
+            int i = 0;
             scSavedWords = new StringCollection();
             foreach (string str1 in InitialPhrase)
             {
-                scSavedWords.Add(str1);
+                scSavedWords.Add((bUsePhrase[i++] ? "1:" : "0:") + str1);
             }
-            SavePhraseUsage();
             Properties.Settings.Default.SearchPhrases = scSavedWords;
             Properties.Settings.Default.Save();
         }
@@ -787,7 +766,6 @@ namespace PDF_PhraseFinder
         private void btnSave_Click(object sender, EventArgs e)
         {
             UpdateSettings();
-            SavePH_CheckMarks();
             SaveSettings();
         }
 
@@ -824,6 +802,8 @@ namespace PDF_PhraseFinder
         {
             Properties.Settings.Default.IsLastFolder = LocalSettings.strLastFolder;
             Properties.Settings.Default.bIgnoreCase = LocalSettings.bIgnoreCase;
+            Properties.Settings.Default.PDFZoomInx = LocalSettings.PDFZoomInx;
+            Properties.Settings.Default.PDFZoomPCT = LocalSettings.PDFZoomPCT;
             Properties.Settings.Default.Save();
         }
 
@@ -831,6 +811,9 @@ namespace PDF_PhraseFinder
         {
             LocalSettings.strLastFolder = Properties.Settings.Default.IsLastFolder;
             LocalSettings.bIgnoreCase = Properties.Settings.Default.bIgnoreCase;
+            LocalSettings.PDFZoomInx = Properties.Settings.Default.PDFZoomInx;
+            LocalSettings.PDFZoomPCT = Properties.Settings.Default.PDFZoomPCT;
+            tbZoomPCT.Text = Properties.Settings.Default.PDFZoomPCT.ToString();
             cbIgnoreCase.Checked = LocalSettings.bIgnoreCase;
             if (LocalSettings.strLastFolder == "")
             {
@@ -913,25 +896,32 @@ namespace PDF_PhraseFinder
             bStopEarly = true;
         }
 
+        /// <summary>
+        /// if any additional phrases on the page then allow them to be selected
+        /// </summary>
+        private void AllowNextPhrase()
+        {
+            btnNext.Visible = iCurrentPagePhraseCount > 0;
+        }
+
         private void btnNext_Click(object sender, EventArgs e)
         {
             if (ThisPageList == null) return;
-            iCurrentPagePhraseActive++;
-            if (iCurrentPagePhraseActive == iCurrentPagePhraseCount)
-            {
-                nudPage.UpButton();
-                return;
-            }
-            tbViewPage.Text = iCurrentPage.ToString() + "." + (1 + iCurrentPagePhraseActive).ToString();
-            if (ThisDocView != null)
-            {
-                ViewSelectedPage();
-            }
+            bool bFound = ThisDoc.FindText(CurrentActivePhrase,
+                cbIgnoreCase.Checked ? 0 : 1,
+                cbWholeWord.Checked ? 1 : 0,
+                0);
+
         }
 
         private void cbIgnoreCase_CheckedChanged_1(object sender, EventArgs e)
         {
             LocalSettings.bIgnoreCase = cbIgnoreCase.Checked;
+        }
+
+        private void PhraseFinderForm_Load(object sender, EventArgs e)
+        {
+            cbZoom.SelectedIndex = LocalSettings.PDFZoomInx;
         }
     }
 }

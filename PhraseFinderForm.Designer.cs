@@ -49,6 +49,7 @@ namespace PDF_PhraseFinder
             btnNext = new Button();
             cbWholeWord = new CheckBox();
             dgv_phrases = new DataGridView();
+            tbZoomPCT = new TextBox();
             groupBox1 = new GroupBox();
             groupBox3 = new GroupBox();
             tbTotalMatch = new TextBox();
@@ -62,6 +63,8 @@ namespace PDF_PhraseFinder
             pbarLoading = new ProgressBar();
             btnRunSearch = new Button();
             groupBox6 = new GroupBox();
+            groupBox10 = new GroupBox();
+            cbZoom = new ComboBox();
             cbIgnoreCase = new CheckBox();
             groupBox9 = new GroupBox();
             btnInvert = new Button();
@@ -82,6 +85,7 @@ namespace PDF_PhraseFinder
             groupBox5.SuspendLayout();
             groupBox4.SuspendLayout();
             groupBox6.SuspendLayout();
+            groupBox10.SuspendLayout();
             groupBox9.SuspendLayout();
             groupBox8.SuspendLayout();
             groupBox7.SuspendLayout();
@@ -205,13 +209,14 @@ namespace PDF_PhraseFinder
             // 
             // btnNext
             // 
-            btnNext.Location = new Point(240, 42);
+            btnNext.Location = new Point(258, 44);
             btnNext.Name = "btnNext";
-            btnNext.Size = new Size(60, 35);
+            btnNext.Size = new Size(126, 35);
             btnNext.TabIndex = 3;
-            btnNext.Text = "next";
+            btnNext.Text = "Next Phrase";
             toolTip1.SetToolTip(btnNext, "next phrase on same page");
             btnNext.UseVisualStyleBackColor = true;
+            btnNext.Visible = false;
             btnNext.Click += btnNext_Click;
             // 
             // cbWholeWord
@@ -219,7 +224,7 @@ namespace PDF_PhraseFinder
             cbWholeWord.AutoSize = true;
             cbWholeWord.Checked = true;
             cbWholeWord.CheckState = CheckState.Checked;
-            cbWholeWord.Location = new Point(28, 95);
+            cbWholeWord.Location = new Point(22, 48);
             cbWholeWord.Name = "cbWholeWord";
             cbWholeWord.Size = new Size(92, 19);
             cbWholeWord.TabIndex = 6;
@@ -230,13 +235,22 @@ namespace PDF_PhraseFinder
             // dgv_phrases
             // 
             dgv_phrases.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgv_phrases.Location = new Point(413, 31);
+            dgv_phrases.Location = new Point(375, 31);
             dgv_phrases.Name = "dgv_phrases";
             dgv_phrases.RowTemplate.Height = 25;
             dgv_phrases.Size = new Size(344, 309);
             dgv_phrases.TabIndex = 0;
             toolTip1.SetToolTip(dgv_phrases, "click any row to select a phrase  for page viewing");
             dgv_phrases.Click += dgv_phrases_Click;
+            // 
+            // tbZoomPCT
+            // 
+            tbZoomPCT.Location = new Point(45, 117);
+            tbZoomPCT.Name = "tbZoomPCT";
+            tbZoomPCT.Size = new Size(33, 23);
+            tbZoomPCT.TabIndex = 7;
+            tbZoomPCT.Text = "75";
+            toolTip1.SetToolTip(tbZoomPCT, "PDF zoom percent");
             // 
             // groupBox1
             // 
@@ -245,7 +259,7 @@ namespace PDF_PhraseFinder
             groupBox1.Controls.Add(tbPdfName);
             groupBox1.Location = new Point(253, 27);
             groupBox1.Name = "groupBox1";
-            groupBox1.Size = new Size(556, 171);
+            groupBox1.Size = new Size(507, 171);
             groupBox1.TabIndex = 1;
             groupBox1.TabStop = false;
             groupBox1.Text = "Active PDF";
@@ -288,16 +302,16 @@ namespace PDF_PhraseFinder
             // 
             tbPdfName.Location = new Point(76, 38);
             tbPdfName.Name = "tbPdfName";
-            tbPdfName.Size = new Size(416, 23);
+            tbPdfName.Size = new Size(407, 23);
             tbPdfName.TabIndex = 0;
             // 
             // groupBox5
             // 
             groupBox5.Controls.Add(groupBox4);
             groupBox5.Controls.Add(pbarLoading);
-            groupBox5.Location = new Point(857, 27);
+            groupBox5.Location = new Point(787, 27);
             groupBox5.Name = "groupBox5";
-            groupBox5.Size = new Size(322, 171);
+            groupBox5.Size = new Size(406, 171);
             groupBox5.TabIndex = 2;
             groupBox5.TabStop = false;
             groupBox5.Text = "Search Progress";
@@ -355,23 +369,45 @@ namespace PDF_PhraseFinder
             // 
             // groupBox6
             // 
-            groupBox6.Controls.Add(cbWholeWord);
-            groupBox6.Controls.Add(cbIgnoreCase);
+            groupBox6.Controls.Add(groupBox10);
             groupBox6.Controls.Add(groupBox9);
             groupBox6.Controls.Add(groupBox8);
             groupBox6.Controls.Add(groupBox7);
             groupBox6.Controls.Add(dgv_phrases);
             groupBox6.Location = new Point(33, 219);
             groupBox6.Name = "groupBox6";
-            groupBox6.Size = new Size(776, 355);
+            groupBox6.Size = new Size(727, 355);
             groupBox6.TabIndex = 4;
             groupBox6.TabStop = false;
             groupBox6.Text = "Phrase Searching";
             // 
+            // groupBox10
+            // 
+            groupBox10.Controls.Add(cbZoom);
+            groupBox10.Controls.Add(tbZoomPCT);
+            groupBox10.Controls.Add(cbWholeWord);
+            groupBox10.Controls.Add(cbIgnoreCase);
+            groupBox10.Location = new Point(16, 31);
+            groupBox10.Name = "groupBox10";
+            groupBox10.Size = new Size(131, 146);
+            groupBox10.TabIndex = 5;
+            groupBox10.TabStop = false;
+            groupBox10.Text = "Local Settings";
+            // 
+            // cbZoom
+            // 
+            cbZoom.FormattingEnabled = true;
+            cbZoom.Items.AddRange(new object[] { "AVZoomNoVary", "AVZoomFitPage", "AVZoomFitWidth", "AVZoomFitHeight", "AVZoomVisWidth", "AVZoomPreferred" });
+            cbZoom.Location = new Point(9, 79);
+            cbZoom.Name = "cbZoom";
+            cbZoom.Size = new Size(113, 23);
+            cbZoom.TabIndex = 8;
+            cbZoom.Text = "AVZoomFitPage";
+            // 
             // cbIgnoreCase
             // 
             cbIgnoreCase.AutoSize = true;
-            cbIgnoreCase.Location = new Point(28, 54);
+            cbIgnoreCase.Location = new Point(22, 23);
             cbIgnoreCase.Name = "cbIgnoreCase";
             cbIgnoreCase.Size = new Size(88, 19);
             cbIgnoreCase.TabIndex = 5;
@@ -384,7 +420,7 @@ namespace PDF_PhraseFinder
             groupBox9.Controls.Add(btnInvert);
             groupBox9.Controls.Add(btnUncheckall);
             groupBox9.Controls.Add(btnSelectAll);
-            groupBox9.Location = new Point(210, 194);
+            groupBox9.Location = new Point(172, 194);
             groupBox9.Name = "groupBox9";
             groupBox9.Size = new Size(176, 146);
             groupBox9.TabIndex = 4;
@@ -426,7 +462,7 @@ namespace PDF_PhraseFinder
             groupBox8.Controls.Add(btnSave);
             groupBox8.Controls.Add(btnRemove);
             groupBox8.Controls.Add(btnAdd);
-            groupBox8.Location = new Point(210, 31);
+            groupBox8.Location = new Point(172, 31);
             groupBox8.Name = "groupBox8";
             groupBox8.Size = new Size(176, 146);
             groupBox8.TabIndex = 2;
@@ -439,7 +475,7 @@ namespace PDF_PhraseFinder
             groupBox7.Controls.Add(btnExport);
             groupBox7.Location = new Point(16, 203);
             groupBox7.Name = "groupBox7";
-            groupBox7.Size = new Size(147, 137);
+            groupBox7.Size = new Size(131, 137);
             groupBox7.TabIndex = 1;
             groupBox7.TabStop = false;
             groupBox7.Text = "Clikpboard";
@@ -447,12 +483,13 @@ namespace PDF_PhraseFinder
             // tbMatches
             // 
             tbMatches.BorderStyle = BorderStyle.FixedSingle;
-            tbMatches.Location = new Point(857, 236);
+            tbMatches.Location = new Point(809, 228);
             tbMatches.Multiline = true;
             tbMatches.Name = "tbMatches";
             tbMatches.ScrollBars = ScrollBars.Vertical;
-            tbMatches.Size = new Size(322, 205);
+            tbMatches.Size = new Size(384, 225);
             tbMatches.TabIndex = 5;
+            tbMatches.Text = "\r\n\r\n\r\n            WARNING: DO NOT CLOSE PDF DOCUMENT\r\n                    ONCE THE DOCUMENT IS OPENED";
             // 
             // gbPageCtrl
             // 
@@ -461,21 +498,21 @@ namespace PDF_PhraseFinder
             gbPageCtrl.Controls.Add(nudPage);
             gbPageCtrl.Controls.Add(btnViewDoc);
             gbPageCtrl.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point);
-            gbPageCtrl.Location = new Point(857, 459);
+            gbPageCtrl.Location = new Point(787, 459);
             gbPageCtrl.Name = "gbPageCtrl";
-            gbPageCtrl.Size = new Size(306, 115);
+            gbPageCtrl.Size = new Size(406, 115);
             gbPageCtrl.TabIndex = 6;
             gbPageCtrl.TabStop = false;
-            gbPageCtrl.Text = "Page View Control";
+            gbPageCtrl.Text = "Page View Control (page/word)";
             gbPageCtrl.Visible = false;
             // 
             // tbViewPage
             // 
             tbViewPage.Location = new Point(166, 43);
             tbViewPage.Name = "tbViewPage";
-            tbViewPage.Size = new Size(56, 33);
+            tbViewPage.Size = new Size(57, 33);
             tbViewPage.TabIndex = 2;
-            tbViewPage.Visible = false;
+            tbViewPage.Text = "1";
             // 
             // btnViewDoc
             // 
@@ -504,6 +541,7 @@ namespace PDF_PhraseFinder
             Name = "PhraseFinderForm";
             Text = "USDA / FNS";
             FormClosing += PhraseFinderForm_FormClosing;
+            Load += PhraseFinderForm_Load;
             MStrip.ResumeLayout(false);
             MStrip.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)nudPage).EndInit();
@@ -518,7 +556,8 @@ namespace PDF_PhraseFinder
             groupBox4.ResumeLayout(false);
             groupBox4.PerformLayout();
             groupBox6.ResumeLayout(false);
-            groupBox6.PerformLayout();
+            groupBox10.ResumeLayout(false);
+            groupBox10.PerformLayout();
             groupBox9.ResumeLayout(false);
             groupBox8.ResumeLayout(false);
             groupBox7.ResumeLayout(false);
@@ -571,5 +610,8 @@ namespace PDF_PhraseFinder
         private Button btnNext;
         private CheckBox cbWholeWord;
         private CheckBox cbIgnoreCase;
+        private GroupBox groupBox10;
+        private TextBox tbZoomPCT;
+        private ComboBox cbZoom;
     }
 }

@@ -61,16 +61,6 @@ namespace PDF_PhraseFinder.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Sat 07/29/2023 14:55:00.63 
-        ///.
-        /// </summary>
-        internal static string BuildDate {
-            get {
-                return ResourceManager.GetString("BuildDate", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
         internal static System.Drawing.Icon usda {

@@ -60,13 +60,25 @@ namespace PDF_PhraseFinder.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string UsePhrase {
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public int PDFZoomInx {
             get {
-                return ((string)(this["UsePhrase"]));
+                return ((int)(this["PDFZoomInx"]));
             }
             set {
-                this["UsePhrase"] = value;
+                this["PDFZoomInx"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100")]
+        public int PDFZoomPCT {
+            get {
+                return ((int)(this["PDFZoomPCT"]));
+            }
+            set {
+                this["PDFZoomPCT"] = value;
             }
         }
     }
