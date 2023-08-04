@@ -32,6 +32,7 @@ namespace PDF_PhraseFinder
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PhraseFinderForm));
             MStrip = new MenuStrip();
             fileToolStripMenuItem = new ToolStripMenuItem();
             openToolStripMenuItem = new ToolStripMenuItem();
@@ -489,7 +490,7 @@ namespace PDF_PhraseFinder
             tbMatches.ScrollBars = ScrollBars.Vertical;
             tbMatches.Size = new Size(384, 225);
             tbMatches.TabIndex = 5;
-            tbMatches.Text = "\r\n\r\n\r\n            WARNING: DO NOT CLOSE PDF DOCUMENT\r\n                    ONCE THE DOCUMENT IS OPENED";
+            tbMatches.Text = resources.GetString("tbMatches.Text");
             // 
             // gbPageCtrl
             // 

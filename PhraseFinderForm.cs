@@ -307,7 +307,8 @@ namespace PDF_PhraseFinder
             }
             catch
             {
-                tbPdfName.Text = "missing Adobe DLL or bad file:" + tbPdfName.Text;
+                tbMatches.Text = "You may not have logged into Adobe\r\n";
+                tbMatches.Text+= "Missing Adobe DLL (bad intall)\r\n or bad PDF file:" + tbPdfName.Text;
                 return false;
             }
             return true;
