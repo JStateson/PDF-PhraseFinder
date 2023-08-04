@@ -330,10 +330,19 @@ namespace PDF_PhraseFinder
             }
         }
 
-        private void SearchThisFullPage(int p)
+        private bool SearchThisFullPage(int p)
         {
             string word, strBig = "";
-            int numWords = int.Parse(theseFields.ExecuteThisJavascript("event.value=this.getPageNumWords(" + p + ");"));
+            int numWords = 0;
+            try
+            {
+                numWords = int.Parse(theseFields.ExecuteThisJavascript("event.value=this.getPageNumWords(" + p + ");"));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("failed to read at page " + p.ToString());
+                return false;
+            }
             for (int i = 0; i < numWords; i++)
             {
                 try
@@ -358,6 +367,7 @@ namespace PDF_PhraseFinder
                 if (phlist[i].Select)
                     FindMatches(ref strBig, i, p);
             }
+            return true;
         }
         // get the next word in the PDF
         private string GetThisWord(int iCurrent, int iLastWord, int iCurrentPage, ref bool bError)
@@ -446,9 +456,12 @@ namespace PDF_PhraseFinder
                 tbPdfName.Text = "corrupt pdf:" + tbPdfName.Text;
                 return false;
             }
+            iCurrentPage = 1;
+            ViewDoc(tbPdfName.Text);
             for (int p = 0; p < TotalPDFPages; p++)
             {
-                SearchThisFullPage(p);
+                bool bOK = SearchThisFullPage(p);
+                if (!bOK) return false;
                 SetPBAR(p);
                 if ((p % 10) == 0)
                 {
@@ -475,7 +488,7 @@ namespace PDF_PhraseFinder
             tbMatches.Text += OutText;
             TotalMatches = GetMatchCount();
             tbTotalMatch.Text = TotalMatches.ToString();
-            avDoc.Close(0);
+            //avDoc.Close(0);
             //avDoc = null;
             //formApp = null;
             dgv_phrases.DataSource = phlist.ToArray(); // connect results to the data grid view widget

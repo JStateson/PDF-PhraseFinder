@@ -51,6 +51,10 @@ namespace PDF_PhraseFinder
             cbWholeWord = new CheckBox();
             dgv_phrases = new DataGridView();
             tbZoomPCT = new TextBox();
+            groupBox7 = new GroupBox();
+            gbPageCtrl = new GroupBox();
+            tbViewPage = new TextBox();
+            btnViewDoc = new Button();
             groupBox1 = new GroupBox();
             groupBox3 = new GroupBox();
             tbTotalMatch = new TextBox();
@@ -72,14 +76,12 @@ namespace PDF_PhraseFinder
             btnUncheckall = new Button();
             btnSelectAll = new Button();
             groupBox8 = new GroupBox();
-            groupBox7 = new GroupBox();
             tbMatches = new TextBox();
-            gbPageCtrl = new GroupBox();
-            tbViewPage = new TextBox();
-            btnViewDoc = new Button();
             MStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)nudPage).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dgv_phrases).BeginInit();
+            groupBox7.SuspendLayout();
+            gbPageCtrl.SuspendLayout();
             groupBox1.SuspendLayout();
             groupBox3.SuspendLayout();
             groupBox2.SuspendLayout();
@@ -89,8 +91,6 @@ namespace PDF_PhraseFinder
             groupBox10.SuspendLayout();
             groupBox9.SuspendLayout();
             groupBox8.SuspendLayout();
-            groupBox7.SuspendLayout();
-            gbPageCtrl.SuspendLayout();
             SuspendLayout();
             // 
             // MStrip
@@ -252,6 +252,52 @@ namespace PDF_PhraseFinder
             tbZoomPCT.TabIndex = 7;
             tbZoomPCT.Text = "100";
             toolTip1.SetToolTip(tbZoomPCT, "PDF zoom percent");
+            // 
+            // groupBox7
+            // 
+            groupBox7.Controls.Add(btnImport);
+            groupBox7.Controls.Add(btnExport);
+            groupBox7.Location = new Point(16, 203);
+            groupBox7.Name = "groupBox7";
+            groupBox7.Size = new Size(131, 137);
+            groupBox7.TabIndex = 1;
+            groupBox7.TabStop = false;
+            groupBox7.Text = "Clikpboard";
+            toolTip1.SetToolTip(groupBox7, "Use setting instead");
+            // 
+            // gbPageCtrl
+            // 
+            gbPageCtrl.Controls.Add(btnNext);
+            gbPageCtrl.Controls.Add(tbViewPage);
+            gbPageCtrl.Controls.Add(nudPage);
+            gbPageCtrl.Controls.Add(btnViewDoc);
+            gbPageCtrl.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point);
+            gbPageCtrl.Location = new Point(787, 459);
+            gbPageCtrl.Name = "gbPageCtrl";
+            gbPageCtrl.Size = new Size(406, 115);
+            gbPageCtrl.TabIndex = 6;
+            gbPageCtrl.TabStop = false;
+            gbPageCtrl.Text = "Page View Control (page/word)";
+            toolTip1.SetToolTip(gbPageCtrl, "Display the next or the previous\r\npage that had the phrase");
+            gbPageCtrl.Visible = false;
+            // 
+            // tbViewPage
+            // 
+            tbViewPage.Location = new Point(166, 43);
+            tbViewPage.Name = "tbViewPage";
+            tbViewPage.Size = new Size(57, 33);
+            tbViewPage.TabIndex = 2;
+            tbViewPage.Text = "1";
+            // 
+            // btnViewDoc
+            // 
+            btnViewDoc.Location = new Point(15, 44);
+            btnViewDoc.Name = "btnViewDoc";
+            btnViewDoc.Size = new Size(99, 36);
+            btnViewDoc.TabIndex = 0;
+            btnViewDoc.Text = "View Doc";
+            btnViewDoc.UseVisualStyleBackColor = true;
+            btnViewDoc.Click += btnViewDoc_Click;
             // 
             // groupBox1
             // 
@@ -472,18 +518,6 @@ namespace PDF_PhraseFinder
             groupBox8.TabStop = false;
             groupBox8.Text = "Phrases";
             // 
-            // groupBox7
-            // 
-            groupBox7.Controls.Add(btnImport);
-            groupBox7.Controls.Add(btnExport);
-            groupBox7.Location = new Point(16, 203);
-            groupBox7.Name = "groupBox7";
-            groupBox7.Size = new Size(131, 137);
-            groupBox7.TabIndex = 1;
-            groupBox7.TabStop = false;
-            groupBox7.Text = "Clikpboard";
-            toolTip1.SetToolTip(groupBox7, "Use setting instead");
-            // 
             // tbMatches
             // 
             tbMatches.BorderStyle = BorderStyle.FixedSingle;
@@ -494,40 +528,6 @@ namespace PDF_PhraseFinder
             tbMatches.Size = new Size(384, 225);
             tbMatches.TabIndex = 5;
             tbMatches.Text = resources.GetString("tbMatches.Text");
-            // 
-            // gbPageCtrl
-            // 
-            gbPageCtrl.Controls.Add(btnNext);
-            gbPageCtrl.Controls.Add(tbViewPage);
-            gbPageCtrl.Controls.Add(nudPage);
-            gbPageCtrl.Controls.Add(btnViewDoc);
-            gbPageCtrl.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point);
-            gbPageCtrl.Location = new Point(787, 459);
-            gbPageCtrl.Name = "gbPageCtrl";
-            gbPageCtrl.Size = new Size(406, 115);
-            gbPageCtrl.TabIndex = 6;
-            gbPageCtrl.TabStop = false;
-            gbPageCtrl.Text = "Page View Control (page/word)";
-            toolTip1.SetToolTip(gbPageCtrl, "Display the next or the previous\r\npage that had the phrase");
-            gbPageCtrl.Visible = false;
-            // 
-            // tbViewPage
-            // 
-            tbViewPage.Location = new Point(166, 43);
-            tbViewPage.Name = "tbViewPage";
-            tbViewPage.Size = new Size(57, 33);
-            tbViewPage.TabIndex = 2;
-            tbViewPage.Text = "1";
-            // 
-            // btnViewDoc
-            // 
-            btnViewDoc.Location = new Point(15, 44);
-            btnViewDoc.Name = "btnViewDoc";
-            btnViewDoc.Size = new Size(99, 36);
-            btnViewDoc.TabIndex = 0;
-            btnViewDoc.Text = "View Doc";
-            btnViewDoc.UseVisualStyleBackColor = true;
-            btnViewDoc.Click += btnViewDoc_Click;
             // 
             // PhraseFinderForm
             // 
@@ -551,6 +551,9 @@ namespace PDF_PhraseFinder
             MStrip.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)nudPage).EndInit();
             ((System.ComponentModel.ISupportInitialize)dgv_phrases).EndInit();
+            groupBox7.ResumeLayout(false);
+            gbPageCtrl.ResumeLayout(false);
+            gbPageCtrl.PerformLayout();
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();
             groupBox3.ResumeLayout(false);
@@ -565,9 +568,6 @@ namespace PDF_PhraseFinder
             groupBox10.PerformLayout();
             groupBox9.ResumeLayout(false);
             groupBox8.ResumeLayout(false);
-            groupBox7.ResumeLayout(false);
-            gbPageCtrl.ResumeLayout(false);
-            gbPageCtrl.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
