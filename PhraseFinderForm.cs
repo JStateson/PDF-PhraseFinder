@@ -598,13 +598,18 @@ namespace PDF_PhraseFinder
             }
         }
 
-        private void FormWorkingFromInitial()
+        /// <summary>
+        /// get the phrase out of that view data table and configure it for
+        /// doing the searching.  User may have changed the phrase and not saved them
+        /// </summary>
+        private void FormWorkingFromTable()
         {
-
+            string strTemp;
             for (int i = 0; i < NumPhrases; i++)
             {
+                strTemp = phlist[i].Phrase;
                 WorkingPhrases[i] = cbWholeWord.Checked ? " " : "";
-                string strTemp = cbIgnoreCase.Checked ? InitialPhrase[i].ToLower() : InitialPhrase[i];
+                strTemp = cbIgnoreCase.Checked ? strTemp.ToLower() : strTemp;
                 WorkingPhrases[i] += strTemp.Trim();
                 WorkingPhrases[i] += cbWholeWord.Checked ? " " : "";
             }
@@ -614,7 +619,7 @@ namespace PDF_PhraseFinder
         private void btnRunSearch_Click(object sender, EventArgs e)
         {
             ClearLastResults();
-            FormWorkingFromInitial();
+            FormWorkingFromTable();
             btnRunSearch.Enabled = false;
             btnStopScan.Enabled = true;
             RunSearch();
