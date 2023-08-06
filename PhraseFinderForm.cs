@@ -13,13 +13,18 @@ using System.Configuration;
 // data mining PDF appplication
 // copyright 2023, Joseph Stateson  github/jstateson  
 /*
- * Notes
- * must add references to adobe and set imbed to false or no
- * must select application and select settings to create settings.settings
- * had to select os 8, not 10.  not sure why sdk is missing???
- * copy usda.ico in resources.resx
- * 8/4/2023 adding "0:" or "1:" prefix to phrase to indicated if it was checked or not
- */
+* Notes
+* must add references to adobe and set imbed to false or no
+* must select application and select settings to create settings.settings
+* had to select os 8, not 10.  not sure why sdk is missing???
+* copy usda.ico in resources.resx
+* 8/4/2023 adding "0:" or "1:" prefix to phrase to indicated if it was checked or not
+* example code
+* 1: https://community.adobe.com/t5/acrobat-sdk-discussions/extract-text-from-pdf-using-c/m-p/4002187
+* 2: https://stackoverflow.com/questions/709606/programmatically-search-for-text-in-a-pdf-file-and-tell-the-page-number
+*https://opensource.adobe.com/dc-acrobat-sdk-docs/library/interapp/IAC_API_OLE_Objects.html#50532405_34749
+*https://opensource.adobe.com/dc-acrobat-sdk-docs/acrobatsdk/pdfs/acrobatsdk_samplesguide.pdf
+*/
 
 namespace PDF_PhraseFinder
 {
@@ -692,6 +697,7 @@ namespace PDF_PhraseFinder
             Point ThisRC = dgv_phrases.CurrentCellAddress;
             iCurrentRow = ThisRC.Y;
             int iCol = ThisRC.X;
+            if (iCol < 2) return; // allow editing the text or checkbox column
             iCurrentPage = -1;
             if (phlist[iCurrentRow].strPages != "")
             {
