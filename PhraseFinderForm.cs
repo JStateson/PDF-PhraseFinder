@@ -405,6 +405,8 @@ namespace PDF_PhraseFinder
         private void ViewSelectedPage()
         {
             if (iCurrentPage < 0) return;
+            if (ThisDoc == null)
+                ViewDoc(tbPdfName.Text);
             Int16 pctValue = Convert.ToInt16(tbZoomPCT.Text); //probably need to "try" this conversion as user may type garbage in text box
             Int16 inxValue = Convert.ToInt16(cbZoom.SelectedIndex);
             if (pctValue < 0 || pctValue > 100) pctValue = 75;
@@ -493,9 +495,7 @@ namespace PDF_PhraseFinder
             tbMatches.Text += OutText;
             TotalMatches = GetMatchCount();
             tbTotalMatch.Text = TotalMatches.ToString();
-            //avDoc.Close(0);
-            //avDoc = null;
-            //formApp = null;
+            //avDoc.Close(1);
             dgv_phrases.DataSource = phlist.ToArray(); // connect results to the data grid view widget
             bFormDirty = true;
             return true;
@@ -627,6 +627,15 @@ namespace PDF_PhraseFinder
             FormWorkingFromTable();
             btnRunSearch.Enabled = false;
             btnStopScan.Enabled = true;
+            string strWarning =
+@"While the search is running, do not edit or close the document.
+Watch the document and be sure to dismiss any popups else
+the search will stop and the program may freeze.  When the
+search is finished, click on any of the match page numbers
+in the 3rd column under the title 'Numbers'.
+Selecting other columns allows editing the table.
+Click 'stop' if you want to quit, then exit the program.";
+            tbMatches.Text = strWarning;
             RunSearch();
             btnRunSearch.Enabled = true;
             btnStopScan.Enabled = false;
@@ -663,7 +672,8 @@ namespace PDF_PhraseFinder
             int iVal = Convert.ToInt32(nudPage.Value);
             iCurrentPage = ThisPageList[iVal];
             tbViewPage.Text = iCurrentPage.ToString();
-            ViewDoc(tbPdfName.Text);
+            //ViewDoc(tbPdfName.Text);
+            ViewSelectedPage();
             iCurrentPagePhraseActive = 0;
             iCurrentPagePhraseCount = phlist[iCurrentRow].WordsOnPage[Convert.ToInt32(nudPage.Value)];
             btnNext.Visible = iCurrentPagePhraseCount > 0;
@@ -672,7 +682,8 @@ namespace PDF_PhraseFinder
 
         private void btnViewDoc_Click(object sender, EventArgs e)
         {
-            ViewDoc(tbPdfName.Text);
+            //ViewDoc(tbPdfName.Text);
+            ViewSelectedPage();
         }
 
 
@@ -685,7 +696,8 @@ namespace PDF_PhraseFinder
             nudPage.ValueChanged -= nudPage_ValueChanged;
             nudPage.Value = 0;
             nudPage.ValueChanged += nudPage_ValueChanged;
-            ViewDoc(tbPdfName.Text);
+            //ViewDoc(tbPdfName.Text);
+            ViewSelectedPage();
         }
 
         /// <summary>
@@ -850,6 +862,8 @@ namespace PDF_PhraseFinder
         private void PhraseFinderForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             SaveLocalSettings();
+            if (ThisDoc != null)
+                ThisDoc.Close(1);
         }
 
 

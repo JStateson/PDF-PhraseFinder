@@ -133,11 +133,19 @@
                            EXIT THIS PROGRAM FIRST
 
 
-           Adobe PRO or Standard MUST be instaleld and
+           Adobe PRO or Standard MUST be installed and
            you MUST have logged in and run through the
           startup and introduction phase.  This application
            will not log you into Adobe.  If you cannot run
            Adobe Acrobat then this app will  fail after 30
-           or more seconds.</value>
+           or more seconds.
+
+While the search is running, do not edit or close the document.
+Watch the document and be sure to dismiss any popups else
+the search will stop and the program may freeze.  When the
+search is finished, click on any of the match page numbers
+in the 3rd column under the title 'Numbers'.
+Selecting other columns allows editing the table.
+Click 'stop' if you want to quit, then exit the program.</value>
   </data>
 </root>
