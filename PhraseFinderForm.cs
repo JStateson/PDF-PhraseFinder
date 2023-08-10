@@ -407,22 +407,25 @@ namespace PDF_PhraseFinder
             if (iCurrentPage < 0) return;
             if (ThisDoc == null)
                 ViewDoc(tbPdfName.Text);
-            Int16 pctValue = Convert.ToInt16(tbZoomPCT.Text); //probably need to "try" this conversion as user may type garbage in text box
-            Int16 inxValue = Convert.ToInt16(cbZoom.SelectedIndex);
-            if (pctValue < 0 || pctValue > 100) pctValue = 75;
-            try
+            if(ThisDoc.IsValid())
             {
-                ThisDocView = ThisDoc.GetAVPageView() as CAcroAVPageView;
-                ThisDocView.ZoomTo(inxValue, pctValue);
-                ThisDocView.GoTo(iCurrentPage - 1);
-                bool bFound = ThisDoc.FindText(CurrentActivePhrase,
-                    cbIgnoreCase.Checked ? 0 : 1,
-                    cbWholeWord.Checked ? 1 : 0,
-                    0);
-            }
-            catch (Exception ex)
-            {
+                Int16 pctValue = Convert.ToInt16(tbZoomPCT.Text); //probably need to "try" this conversion as user may type garbage in text box
+                Int16 inxValue = Convert.ToInt16(cbZoom.SelectedIndex);
+                if (pctValue < 0 || pctValue > 100) pctValue = 75;
+                try
+                {
+                    ThisDocView = ThisDoc.GetAVPageView() as CAcroAVPageView;
+                    ThisDocView.ZoomTo(inxValue, pctValue);
+                    ThisDocView.GoTo(iCurrentPage - 1);
+                    bool bFound = ThisDoc.FindText(CurrentActivePhrase,
+                        cbIgnoreCase.Checked ? 0 : 1,
+                        cbWholeWord.Checked ? 1 : 0,
+                        0);
+                }
+                catch (Exception ex)
+                {
 
+                }
             }
 
         }
@@ -672,8 +675,7 @@ Click 'stop' if you want to quit, then exit the program.";
             int iVal = Convert.ToInt32(nudPage.Value);
             iCurrentPage = ThisPageList[iVal];
             tbViewPage.Text = iCurrentPage.ToString();
-            //ViewDoc(tbPdfName.Text);
-            ViewSelectedPage();
+            ViewDoc(tbPdfName.Text);
             iCurrentPagePhraseActive = 0;
             iCurrentPagePhraseCount = phlist[iCurrentRow].WordsOnPage[Convert.ToInt32(nudPage.Value)];
             btnNext.Visible = iCurrentPagePhraseCount > 0;
@@ -682,8 +684,8 @@ Click 'stop' if you want to quit, then exit the program.";
 
         private void btnViewDoc_Click(object sender, EventArgs e)
         {
-            //ViewDoc(tbPdfName.Text);
-            ViewSelectedPage();
+            iCurrentPage = Convert.ToInt32(tbViewPage.Text);
+            ViewDoc(tbPdfName.Text);
         }
 
 
@@ -862,7 +864,8 @@ Click 'stop' if you want to quit, then exit the program.";
         private void PhraseFinderForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             SaveLocalSettings();
-            if (ThisDoc != null)
+            if (ThisDoc == null) return;
+            if(ThisDoc.IsValid())
                 ThisDoc.Close(1);
         }
 
