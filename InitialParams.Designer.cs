@@ -30,14 +30,14 @@
         {
             components = new System.ComponentModel.Container();
             groupBox2 = new GroupBox();
+            btnChkErr = new Button();
+            label2 = new Label();
+            label1 = new Label();
             btnCancel = new Button();
             btnApply = new Button();
             btnClear = new Button();
             tbPhrases = new TextBox();
             toolTip1 = new ToolTip(components);
-            label1 = new Label();
-            label2 = new Label();
-            btnChkErr = new Button();
             groupBox2.SuspendLayout();
             SuspendLayout();
             // 
@@ -56,6 +56,36 @@
             groupBox2.TabIndex = 0;
             groupBox2.TabStop = false;
             groupBox2.Text = "Default Phrases";
+            // 
+            // btnChkErr
+            // 
+            btnChkErr.Location = new Point(553, 210);
+            btnChkErr.Name = "btnChkErr";
+            btnChkErr.Size = new Size(102, 23);
+            btnChkErr.TabIndex = 7;
+            btnChkErr.Text = "Check Syntax";
+            btnChkErr.UseVisualStyleBackColor = true;
+            btnChkErr.Click += btnChkErr_Click;
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.BackColor = SystemColors.Info;
+            label2.Location = new Point(34, 39);
+            label2.Name = "label2";
+            label2.Size = new Size(299, 15);
+            label2.TabIndex = 6;
+            label2.Text = "Use the clipboard and notepad to save / restore phrases\r\n";
+            // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.BackColor = SystemColors.Info;
+            label1.Location = new Point(506, 265);
+            label1.Name = "label1";
+            label1.Size = new Size(178, 90);
+            label1.TabIndex = 5;
+            label1.Text = "Be sure to click the \r\n\"Save Phrases\"when\r\nyou return to the main form\r\nDashs, slash, underscore and\r\nall puncuation are ignored.\r\nDo not use them in your phrases";
             // 
             // btnCancel
             // 
@@ -97,36 +127,6 @@
             tbPhrases.Size = new Size(460, 281);
             tbPhrases.TabIndex = 0;
             // 
-            // label1
-            // 
-            label1.AutoSize = true;
-            label1.BackColor = SystemColors.Info;
-            label1.Location = new Point(506, 265);
-            label1.Name = "label1";
-            label1.Size = new Size(178, 90);
-            label1.TabIndex = 5;
-            label1.Text = "Be sure to click the \r\n\"Save Phrases\"when\r\nyou return to the main form\r\nDashs, slash, underscore and\r\nall puncuation are ignored.\r\nDo not use them in your phrases";
-            // 
-            // label2
-            // 
-            label2.AutoSize = true;
-            label2.BackColor = SystemColors.Info;
-            label2.Location = new Point(34, 39);
-            label2.Name = "label2";
-            label2.Size = new Size(299, 15);
-            label2.TabIndex = 6;
-            label2.Text = "Use the clipboard and notepad to save / restore phrases\r\n";
-            // 
-            // btnChkErr
-            // 
-            btnChkErr.Location = new Point(553, 210);
-            btnChkErr.Name = "btnChkErr";
-            btnChkErr.Size = new Size(102, 23);
-            btnChkErr.TabIndex = 7;
-            btnChkErr.Text = "Check Syntax";
-            btnChkErr.UseVisualStyleBackColor = true;
-            btnChkErr.Click += btnChkErr_Click;
-            // 
             // InitialParams
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -135,7 +135,7 @@
             Controls.Add(groupBox2);
             FormBorderStyle = FormBorderStyle.FixedToolWindow;
             Name = "InitialParams";
-            Text = "IniitialParams";
+            Text = "InitialParams";
             groupBox2.ResumeLayout(false);
             groupBox2.PerformLayout();
             ResumeLayout(false);

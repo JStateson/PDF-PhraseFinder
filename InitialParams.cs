@@ -15,7 +15,7 @@ namespace PDF_PhraseFinder
     {
         private List<string> OutStr;
         private string[] str1;
-        private string[] str2;  
+        private string[] str2;
         public InitialParams(ref string[] InitialPhrase, ref List<string> strReturn)
         {
             InitializeComponent();
@@ -56,16 +56,16 @@ namespace PDF_PhraseFinder
             str1 = StrToStrs(tbPhrases.Text);
             foreach (string str in str1)
             {
-                for(int i = 0; i < n; i++)
+                for (int i = 0; i < n; i++)
                 {
-                    if(str.Contains(BadLetters.Substring(i,1)))
+                    if (str.Contains(BadLetters.Substring(i, 1)))
                     {
                         strBad += str + "\r\n";
                         break;
                     }
                 }
             }
-            if(strBad != "")
+            if (strBad != "")
             {
                 MessageBox.Show(strBad, "Bad phrases");
             }

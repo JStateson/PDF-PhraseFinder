@@ -215,6 +215,21 @@ namespace PDF_PhraseFinder
         public PhraseFinderForm()
         {
             InitializeComponent();
+            string strPhoneHome =
+@"Adobe Acrobat Pro and Standard verify licensing at
+startup of Acrobat and randomly at various times while
+this Acrobat app is running.  When this happens the
+Phrase Finder Application (FFA) will freeze.
+
+The freeze may last for 10 or more seconds.  During this
+freeze please do not click on any FFA form or the Acrobat
+document itself.  If the freeze lasts more than 30 seconds
+you may have to close or possibly terminate FFA including
+the Acrobat-32 process show in the task manager.
+
+Clicking on the form while the acrobat is waiting for
+license verification can cause Windows to report this
+application as Non Responding";
             try
             {
                 acroApp = new AcroAppClass();
@@ -228,6 +243,7 @@ namespace PDF_PhraseFinder
             GetLocalSettings();
             FillPhrases();
             tbPdfName.Text = " (v) 1.0 (c)Stateson";
+            MessageBox.Show(strPhoneHome,"WARNING",MessageBoxButtons.OK,MessageBoxIcon.Warning);
         }
 
 
