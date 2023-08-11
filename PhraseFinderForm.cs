@@ -1,6 +1,6 @@
 
 using Acrobat;
-using AFORMAUTLib;
+//using AFORMAUTLib;
 using Microsoft.VisualBasic.FileIO;
 using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
@@ -9,6 +9,9 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel;
 using System.Configuration;
+using System.Reflection;
+//using System.Timers;
+
 
 // data mining PDF appplication
 // copyright 2023, Joseph Stateson  github/jstateson  
@@ -18,6 +21,7 @@ using System.Configuration;
 * must select application and select settings to create settings.settings
 * had to select os 8, not 10.  not sure why sdk is missing???
 * copy usda.ico in resources.resx
+* use Ctrl + k + c to comment out lines an u to uncomment
 * 8/4/2023 adding "0:" or "1:" prefix to phrase to indicated if it was checked or not
 * example code
 * 1: https://community.adobe.com/t5/acrobat-sdk-discussions/extract-text-from-pdf-using-c/m-p/4002187
@@ -33,14 +37,15 @@ namespace PDF_PhraseFinder
     {
 
         private CAcroApp acroApp;
-        private AcroAVDoc ThisDoc;
+        private AcroAVDoc ThisDoc = null;
+        private AcroAVDoc AVDoc = null;
         private CAcroAVPageView ThisDocView;
         private int[] ThisPageList;
         private int iCurrentPage = 0;
         private bool bStopEarly = false;
         private int NumPhrases = 5;
-        private long TotalPDFPages, TotalMatches;
-        private IFields theseFields;
+        private int TotalPDFPages, TotalMatches;
+        //private IFields theseFields;
         private bool bFormDirty = false;
         private StringCollection scSavedWords;
         private string CurrentActivePhrase = "";
@@ -53,159 +58,11 @@ namespace PDF_PhraseFinder
 
         private List<cPhraseTable> phlist = new List<cPhraseTable>();   // table of phrases
         private cLocalSettings LocalSettings = new cLocalSettings();    // table of settings
-        private class cLocalSettings         // used to restore user settings
-        {
-            public bool bExitEarly;             // for debugging or demo purpose only examine a limited number of page
-            public string strLastFolder = "";     // where last PDF was obtained
-            public bool bIgnoreCase = true;
-            public int PDFZoomPCT = 75; // percent but not used unless inx correlelates
-            public int PDFZoomInx = 1;  // AVZoomFitPage
-        }
-
-
-        private class cPhraseTable
-        {
-            public bool Select { get; set; }
-            public string Phrase { get; set; }
-            public string Number { get; set; }
-            public int iNumber;
-            public int iDupPageCnt;
-            public int iLastPage;
-            public string strPages = "";
-            public string[] strInSeries;
-            public List<int> WordsOnPage = new List<int>();
-            public int nFollowing; // number of words to check in sequence
-
-            // count the number of following words that must match
-            private int CountWords(string strIn)
-            {
-                char[] delimiters = new char[] { ' ', '\r', '\n' };
-                strInSeries = strIn.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
-                int n = strInSeries.Length;
-                if (n > 1) return n - 1; // if 2 words then must check one more word
-                return 0;
-            }
-            public void InitPhrase(string aPhrase)
-            {
-                Select = true;
-                Number = " ";
-                iNumber = 0;
-                strPages = "";
-                iDupPageCnt = 0;
-                iLastPage = -1;
-                Phrase = aPhrase;
-                nFollowing = CountWords(aPhrase);
-            }
-
-            public void InitPhrase(string aPhrase, bool bSelect)
-            {
-                Select = bSelect;
-                Number = " ";
-                iNumber = 0;
-                strPages = "";
-                iDupPageCnt = 0;
-                iLastPage = -1;
-                Phrase = aPhrase;
-                nFollowing = CountWords(aPhrase);
-            }
-
-            public void AddPage(int jPage) // do not add the same page twice
-            {
-                int iPage = jPage + 1;
-                if (strPages == "")
-                {
-                    strPages = iPage.ToString();
-                    iLastPage = iPage;
-                    WordsOnPage.Add(1);
-                }
-                else
-                {
-                    if (iLastPage == iPage)
-                    {
-                        iDupPageCnt++;
-                        WordsOnPage[^1]++;  // increment the last page count
-                        return;
-                    }
-                    strPages += "," + iPage.ToString();
-                    WordsOnPage.Add(1);
-                    iLastPage = iPage;
-                }
-            }
-            public void IncMatch()
-            {
-                iNumber++;
-            }
-        }
-
+        //private static System.Timers.Timer aTimer;
 
         private string[] InitialPhrase = new string[5] { "school lunch", "Civil Rights", "contract", "food service", "fixed price" };
         private string[] WorkingPhrases = new string[5]; // same as above but optomises somewhat for case sensitivity
         private bool[] bUsePhrase = new bool[5] { true, true, true, true, true };
-
-        //show a simple date on the form
-        private string GetSimpleDate(string sDT)
-        {
-            //Sun 06/09/2019 23:33:53.18 
-            int i = sDT.IndexOf(' ');
-            i++;
-            int j = sDT.LastIndexOf('.');
-            return sDT.Substring(i, j - i);
-        }
-
-
-
-        private bool ObtainProjectSettings()
-        {
-            int n = 0;  // any setttings?
-            int i, j;
-            string[] SavedSettings;
-            scSavedWords = new StringCollection();
-            if (null != Properties.Settings.Default.SearchPhrases)
-                n = Properties.Settings.Default.SearchPhrases.Count;
-            if (n > 0)
-            {
-                SavedSettings = new string[Properties.Settings.Default.SearchPhrases.Count];
-                Properties.Settings.Default.SearchPhrases.CopyTo(SavedSettings, 0);
-                scSavedWords.AddRange(SavedSettings);
-                InitialPhrase = new string[n];
-                WorkingPhrases = new string[n];
-                bUsePhrase = new bool[n];
-                NumPhrases = n;
-                j = 0;
-                foreach (string str in scSavedWords)
-                {
-                    i = str.Length;
-                    if (i < 3) return false;    // cannot be this small
-                    i = str.IndexOf(":");   // expecting 0: or 1:
-                    if (i < 0)
-                    {   // if missing then set checkmark
-                        bUsePhrase[j] = true;
-                        InitialPhrase[j] = str;
-                    }
-                    else
-                    {
-                        bUsePhrase[j] = "1" == str.Substring(0, 1);
-                        InitialPhrase[j] = str.Substring(2);
-                    }
-                    j++;
-                }
-            }
-            else
-            {
-                // there are no setting so write them out using the program defaults
-                // this is only done once to get the checkbox value written to settings
-                NumPhrases = InitialPhrase.Length;
-                i = 0;
-                foreach (string str in InitialPhrase)
-                {
-                    scSavedWords.Add((bUsePhrase[i] ? "1:" : "0:") + str);
-                    i++;
-                }
-                Properties.Settings.Default.SearchPhrases = scSavedWords;
-                Properties.Settings.Default.Save();
-            }
-            return true;
-        }
 
 
 
@@ -215,21 +72,7 @@ namespace PDF_PhraseFinder
         public PhraseFinderForm()
         {
             InitializeComponent();
-            string strPhoneHome =
-@"Adobe Acrobat Pro and Standard verify licensing at
-startup of Acrobat and randomly at various times while
-this Acrobat app is running.  When this happens the
-Phrase Finder Application (PFA) will freeze.
 
-The freeze may last for 10 or more seconds.  During this
-freeze please do not click on any PFA form or the Acrobat
-document itself.  If the freeze lasts more than 30 seconds
-you may have to close or possibly terminate FFA including
-the Acrobat-32 process show in the task manager.
-
-Clicking on the form while the acrobat is waiting for
-license verification can cause Windows to report this
-application as Non Responding";
             try
             {
                 acroApp = new AcroAppClass();
@@ -239,13 +82,58 @@ application as Non Responding";
                 MessageBox.Show("Adobe PRO or STANDARD is not present");
                 this.Close();
             }
-            ObtainProjectSettings();
-            GetLocalSettings();
+            NumPhrases = globals.ObtainProjectSettings(ref InitialPhrase, ref bUsePhrase);
+            WorkingPhrases = new String[NumPhrases];
+            globals.GetLocalSettings(ref LocalSettings);
+            tbZoomPCT.Text = LocalSettings.PDFZoomPCT.ToString();
+            cbIgnoreCase.Checked = LocalSettings.bIgnoreCase;
             FillPhrases();
             tbPdfName.Text = " (v) 1.0 (c)Stateson";
-            MessageBox.Show(strPhoneHome,"WARNING",MessageBoxButtons.OK,MessageBoxIcon.Warning);
+            globals.GiveInitialWarning();
+            //aTimer = new System.Timers.Timer(100);
+            //aTimer.Enabled = false;
+            //aTimer.Elapsed += OnTimedEvent;
+            //aTimer.AutoReset = false;
+
         }
 
+        //private void OnTimedEvent(Object source, ElapsedEventArgs e)
+        //{
+        //    ShowFoundPhrase();
+        //}
+
+        private bool GetPageCount()
+        {
+            CAcroPDDoc pdDoc = (CAcroPDDoc)AVDoc.GetPDDoc();
+            Object jsObj;
+            Type T;
+            //Acquire the Acrobat JavaScript Object interface from the PDDoc object
+            try
+            {
+                jsObj = pdDoc.GetJSObject();
+                T = jsObj.GetType();
+                tbMatches.Text += "Counting pages of " + tbPdfName.Text;
+                bStopEarly = false;
+                pbarLoading.Value = 0;
+                TotalPDFPages = Convert.ToInt32(T.InvokeMember(
+                             "numPages",
+                             BindingFlags.GetProperty |
+                             BindingFlags.Public |
+                             BindingFlags.Instance,
+                             null, jsObj, null));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Document is opened in another app.\r\n You may need to terminate Acrobat 32 DC");
+                AVDoc = null;
+                return false;
+                //throw;
+            }
+
+            pbarLoading.Maximum = TotalPDFPages;
+            tbNumPages.Text = TotalPDFPages.ToString();
+            return TotalPDFPages > 0;
+        }
 
         /// <summary>
         /// user click the file open so help them find a pdf and
@@ -260,23 +148,39 @@ application as Non Responding";
             ofd.DefaultExt = "*pdf";
             ofd.InitialDirectory = LocalSettings.strLastFolder;
             ofd.Filter = "(Adobe PDF)|*.pdf";
-
+            tbMatches.Text = "";
             if (DialogResult.OK != ofd.ShowDialog())
             {
-                tbPdfName.Text = "ERROR:no PDF file found";
-                btnRunSearch.Enabled = false;
+                tbMatches.Text = "ERROR:no PDF file found";
+                searchPanel.Enabled = false;
                 return;
             }
             tbPdfName.Text = ofd.FileName;
             LocalSettings.strLastFolder = Path.GetDirectoryName(ofd.FileName);
-            if (bFormDirty)
+
+            // enable the run button if a document was loaded
+            //btnRunSearch.Enabled = bOpenDocs(tbPdfName.Text);
+            //gbPageCtrl.Visible = GetPageCount();
+            //assume this is a request to load a new doc or reopen the current one
+            if (AVDoc != null)
             {
-                FillPhrases();
-                bFormDirty = false;
+                tbMatches.Text += "Closing Document...\r\n";
+                AVDoc.Close(0);
             }
-            // enable the run button if a docuement was loaded
-            btnRunSearch.Enabled = bOpenDocs(tbPdfName.Text);
-            gbPageCtrl.Visible = true;
+            tbMatches.Text += "Opening Document...\r\n";
+            AVDoc = new AcroAVDoc();
+            try
+            {
+                AVDoc.Open(ofd.FileName, "");
+            }
+            catch (Exception ex)
+            {
+                int i = 0;
+            }
+            tbMatches.Text += "Document Open for searching\r\n";
+            searchPanel.Enabled = GetPageCount();
+            gbPageCtrl.Visible = searchPanel.Enabled;
+            pbarLoading.Maximum = TotalPDFPages;
         }
 
         /// <summary>
@@ -284,9 +188,9 @@ application as Non Responding";
         /// and return the total number of matches
         /// </summary>
         /// <returns></returns>
-        private long GetMatchCount()
+        private int GetMatchCount()
         {
-            long lCnt = 0;
+            int lCnt = 0;
             for (int i = 0; i < NumPhrases; i++)
             {
                 int j = phlist[i].iNumber;
@@ -296,18 +200,9 @@ application as Non Responding";
             return lCnt;
         }
 
-        /// <summary>
-        /// progress bar
-        /// note that DoEvents had the side effect of allowing the use to click on widgets
-        /// while the program is running.  One must disable some feature to prevent, for example,
-        /// starting a new search before the old search has finished.
-        /// </summary>
-        /// <param name="p"></param>
-        private void SetPBAR(int p)
+        private void AllowProgressEvent()
         {
-            double pbarSlope = pbarLoading.Maximum * p;
-            pbarSlope /= TotalPDFPages;
-            pbarLoading.Value = Convert.ToInt32(pbarSlope);
+            pbarLoading.Increment(1);
             pbarLoading.Update();
             pbarLoading.Refresh();
             Application.DoEvents();
@@ -351,24 +246,39 @@ application as Non Responding";
             }
         }
 
-        private bool SearchThisFullPage(int p)
+        private bool SearchThisFullPage(int p, ref Object jsObj, ref Type T)
         {
             string word, strBig = "";
-            int numWords = 0;
+            double numWords = 0;
             try
             {
-                numWords = int.Parse(theseFields.ExecuteThisJavascript("event.value=this.getPageNumWords(" + p + ");"));
+                object[] getPageNumWordsParam = { p };
+                numWords = (double)(T.InvokeMember(
+                    "getPageNumWords",
+                    BindingFlags.InvokeMethod |
+                    BindingFlags.Public |
+                    BindingFlags.Instance,
+                    null, jsObj, getPageNumWordsParam));
             }
             catch (Exception ex)
             {
                 MessageBox.Show("failed to read at page " + p.ToString());
+                tbMatches.Text += "failed to read at page " + p.ToString();
                 return false;
             }
+
             for (int i = 0; i < numWords; i++)
             {
                 try
                 {
-                    word = theseFields.ExecuteThisJavascript("event.value=this.getPageNthWord(" + p.ToString() + "," + i.ToString() + ", true);"); ;
+                    //get a word
+                    object[] getPageNthWordParam = { p, i };
+                    word = (String)T.InvokeMember(
+                        "getPageNthWord",
+                        BindingFlags.InvokeMethod |
+                        BindingFlags.Public |
+                        BindingFlags.Instance,
+                        null, jsObj, getPageNthWordParam);
                 }
                 catch (Exception e)
                 {
@@ -390,22 +300,7 @@ application as Non Responding";
             }
             return true;
         }
-        // get the next word in the PDF
-        private string GetThisWord(int iCurrent, int iLastWord, int iCurrentPage, ref bool bError)
-        {
-            string chkWord = "";
-            try
-            {
-                chkWord = theseFields.ExecuteThisJavascript("event.value=this.getPageNthWord(" + iCurrentPage + "," + iCurrent + ", true);"); // true
-            }
-            catch
-            {
-                MessageBox.Show("Error in PDF at page " + iCurrentPage);
-                bError = true;
-                return "";
-            }
-            return chkWord;
-        }
+
 
         /// <summary>
         /// This function highlights the phrase in  the pdf viewer
@@ -417,13 +312,17 @@ application as Non Responding";
             '4 = AVZoomFitVisibleWidth
             '5 = AVZoomPreferred
         */
-        /// </summary>
-        private void ViewSelectedPage()
+
+
+        private void ShowFoundPhrase()
         {
             if (iCurrentPage < 0) return;
-            if (ThisDoc == null)
-                ViewDoc(tbPdfName.Text);
-            if(ThisDoc.IsValid())
+            ThisDoc = new AcroAVDoc();
+            ThisDoc.Open(tbPdfName.Text, "");
+            ThisDoc.BringToFront();
+            ThisDoc.SetViewMode(1); // (2)PDUseThumbs
+
+            if (ThisDoc.IsValid())
             {
                 Int16 pctValue = Convert.ToInt16(tbZoomPCT.Text); //probably need to "try" this conversion as user may type garbage in text box
                 Int16 inxValue = Convert.ToInt16(cbZoom.SelectedIndex);
@@ -440,84 +339,81 @@ application as Non Responding";
                 }
                 catch (Exception ex)
                 {
-
+                    int i = 0;
                 }
             }
+        }
 
+        private void nudPage_ValueChanged(object sender, EventArgs e)
+        {
+            if (ThisPageList == null) return;
+            int iVal = Convert.ToInt32(nudPage.Value);
+            iCurrentPage = ThisPageList[iVal];
+            tbViewPage.Text = iCurrentPage.ToString();
+            ShowFoundPhrase();
+            iCurrentPagePhraseActive = 0;
+            iCurrentPagePhraseCount = phlist[iCurrentRow].WordsOnPage[Convert.ToInt32(nudPage.Value)];
+            btnNext.Visible = iCurrentPagePhraseCount > 0;
+            return;
         }
 
         //AcroRd32.exe /A "zoom=50&navpanes=1=OpenActions&search=batch" PdfFile
-        // above search for the phrase "batch"
+        // above search for the phrase "batch" is another way
 
-        /// <summary>
-        /// Open the PDF using Acrobat (I assume) and position to the current page selected
-        /// </summary>
-        /// <param name="fileName"></param>
-        private void ViewDoc(string fileName)
-        {
-            if (iCurrentPage < 0) return;
-            ThisDoc = new AcroAVDoc();
-            ThisDoc.Open(fileName, "");
-            ThisDoc.BringToFront();
-            ThisDoc.SetViewMode(1); // (2)PDUseThumbs
-            ViewSelectedPage();
-        }
 
         private bool RunSearch()
         {
-            string OutText = "";
-            TotalMatches = 0;
-            iNullCount = 0;
-            string strPath = tbPdfName.Text;
-            AcroAVDocClass avDoc = new AcroAVDocClass();
-            IAFormApp formApp = new AFormAppClass();
+            if (AVDoc.IsValid())
+            {
+                CAcroPDDoc pdDoc = (CAcroPDDoc)AVDoc.GetPDDoc();
+                //Acquire the Acrobat JavaScript Object interface from the PDDoc object
+                Object jsObj = pdDoc.GetJSObject();
+                string OutText = "";
+                TotalMatches = 0;
+                iNullCount = 0;
+                iCurrentPage = 1;
+                Type T = jsObj.GetType();
 
-            try
-            {
-                avDoc.Open(strPath, "Title");
-                theseFields = (IFields)formApp.Fields;
-            }
-            catch
-            {
-                tbPdfName.Text = "corrupt pdf:" + tbPdfName.Text;
-                return false;
-            }
-            iCurrentPage = 1;
-            ViewDoc(tbPdfName.Text);
-            for (int p = 0; p < TotalPDFPages; p++)
-            {
-                bool bOK = SearchThisFullPage(p);
-                if (!bOK) return false;
-                SetPBAR(p);
-                if ((p % 10) == 0)
+                tbMatches.Text += "Searching ...\r\n";
+
+                for (int p = 0; p < TotalPDFPages; p++)
                 {
-                    tbpageNum.Text = p.ToString();
+                    bool bOK = SearchThisFullPage(p, ref jsObj, ref T);
+                    if (!bOK)
+                    {
+                        tbMatches.Text += "problem reading doc at page " + p.ToString();
+                        return false;
+                    }
+                    AllowProgressEvent();
+                    if ((p % 10) == 0)
+                    {
+                        tbpageNum.Text = p.ToString();
+                    }
+                    if (bStopEarly)
+                    {
+                        bStopEarly = false;
+                        break;
+                    }
                 }
-                if (bStopEarly)
+                pbarLoading.Value = 0;   // clear the progress bar and show results of the pattern search
+                for (int i = 0; i < NumPhrases; i++)
                 {
-                    bStopEarly = false;
-                    break;
+                    if (phlist[i].iNumber > 0)
+                    {
+                        OutText += ">" + phlist[i].Phrase.ToUpper() + "<    found on following pages\r\n";
+                        OutText += phlist[i].strPages + "\r\n";
+                        OutText += "Total Duplicate pages: " + phlist[i].iDupPageCnt + "\r\n\r\n";
+                    }
                 }
+                if (iNullCount > 0) tbMatches.Text += "Null words found:" + iNullCount.ToString() + "\r\n";
+                tbMatches.Text += OutText;
+                TotalMatches = GetMatchCount();
+                tbTotalMatch.Text = TotalMatches.ToString();
+                //avDoc.Close(1);
+                dgv_phrases.DataSource = phlist.ToArray(); // connect results to the data grid view widget
+                return true;
             }
-            SetPBAR(0);   // clear the progress bar and show results of the pattern search
-            for (int i = 0; i < NumPhrases; i++)
-            {
-                if (phlist[i].iNumber > 0)
-                {
-                    OutText += ">" + phlist[i].Phrase.ToUpper() + "<    found on following pages\r\n";
-                    OutText += phlist[i].strPages + "\r\n";
-                    OutText += "Total Duplicate pages: " + phlist[i].iDupPageCnt + "\r\n\r\n";
-                }
-            }
-            tbMatches.Text = "";
-            if (iNullCount > 0) tbMatches.Text = "Null words found:" + iNullCount.ToString() + "\r\n";
-            tbMatches.Text += OutText;
-            TotalMatches = GetMatchCount();
-            tbTotalMatch.Text = TotalMatches.ToString();
-            //avDoc.Close(1);
-            dgv_phrases.DataSource = phlist.ToArray(); // connect results to the data grid view widget
-            bFormDirty = true;
-            return true;
+            return false;
         }
 
         /// <summary>
@@ -646,15 +542,7 @@ application as Non Responding";
             FormWorkingFromTable();
             btnRunSearch.Enabled = false;
             btnStopScan.Enabled = true;
-            string strWarning =
-@"While the search is running, do not edit or close the document.
-Watch the document and be sure to dismiss any popups else
-the search will stop and the program may freeze.  When the
-search is finished, click on any of the match page numbers
-in the 3rd column under the title 'Numbers'.
-Selecting other columns allows editing the table.
-Click 'stop' if you want to quit, then exit the program.";
-            tbMatches.Text = strWarning;
+            globals.GiveRunWarning();
             RunSearch();
             btnRunSearch.Enabled = true;
             btnStopScan.Enabled = false;
@@ -685,23 +573,10 @@ Click 'stop' if you want to quit, then exit the program.";
         }
 
 
-        private void nudPage_ValueChanged(object sender, EventArgs e)
-        {
-            if (ThisPageList == null) return;
-            int iVal = Convert.ToInt32(nudPage.Value);
-            iCurrentPage = ThisPageList[iVal];
-            tbViewPage.Text = iCurrentPage.ToString();
-            ViewDoc(tbPdfName.Text);
-            iCurrentPagePhraseActive = 0;
-            iCurrentPagePhraseCount = phlist[iCurrentRow].WordsOnPage[Convert.ToInt32(nudPage.Value)];
-            btnNext.Visible = iCurrentPagePhraseCount > 0;
-            return;
-        }
-
         private void btnViewDoc_Click(object sender, EventArgs e)
         {
             iCurrentPage = Convert.ToInt32(tbViewPage.Text);
-            ViewDoc(tbPdfName.Text);
+            ShowFoundPhrase();
         }
 
 
@@ -714,9 +589,10 @@ Click 'stop' if you want to quit, then exit the program.";
             nudPage.ValueChanged -= nudPage_ValueChanged;
             nudPage.Value = 0;
             nudPage.ValueChanged += nudPage_ValueChanged;
-            //ViewDoc(tbPdfName.Text);
-            ViewSelectedPage();
+            ShowFoundPhrase();
         }
+
+
 
         /// <summary>
         /// Get the list of pages that contains the wanted phrase and update the
@@ -792,36 +668,23 @@ Click 'stop' if you want to quit, then exit the program.";
             }
         }
 
-        private void SaveSettings()
-        {
-            // should be at AppData\Local\Microsoft\YOUR APPLICATION NAME File name is user.config
-            int i = 0;
-            scSavedWords = new StringCollection();
-            foreach (string str1 in InitialPhrase)
-            {
-                scSavedWords.Add((bUsePhrase[i++] ? "1:" : "0:") + str1);
-            }
-            Properties.Settings.Default.SearchPhrases = scSavedWords;
-            Properties.Settings.Default.Save();
-        }
 
         // the phrase list was edited so copy the edits so they can be saved
         // the searching is done starting with the InitialPhrase list
         // and then setting up workingphrase and phlist 
-        private void UpdateSettings()
+        private void UpdatePhrasesFromTable()
         {
             for (int i = 0; i < NumPhrases; i++)
             {
-                string strTemp = phlist[i].Phrase;
-                InitialPhrase[i] = strTemp.Trim();
+                InitialPhrase[i] = phlist[i].Phrase.Trim();
                 bUsePhrase[i] = phlist[i].Select;
             }
         }
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            UpdateSettings();
-            SaveSettings();
+            UpdatePhrasesFromTable();
+            globals.SavePhraseSettings(ref InitialPhrase, ref bUsePhrase);
         }
 
         private void btnSelectAll_Click(object sender, EventArgs e)
@@ -853,71 +716,15 @@ Click 'stop' if you want to quit, then exit the program.";
             LocalSettings.bIgnoreCase = cbIgnoreCase.Checked;
         }
 
-        private void SaveLocalSettings()
-        {
-            Properties.Settings.Default.IsLastFolder = LocalSettings.strLastFolder;
-            Properties.Settings.Default.bIgnoreCase = LocalSettings.bIgnoreCase;
-            Properties.Settings.Default.PDFZoomInx = LocalSettings.PDFZoomInx;
-            Properties.Settings.Default.PDFZoomPCT = LocalSettings.PDFZoomPCT;
-            Properties.Settings.Default.Save();
-        }
-
-        private void GetLocalSettings()
-        {
-            LocalSettings.strLastFolder = Properties.Settings.Default.IsLastFolder;
-            LocalSettings.bIgnoreCase = Properties.Settings.Default.bIgnoreCase;
-            LocalSettings.PDFZoomInx = Properties.Settings.Default.PDFZoomInx;
-            LocalSettings.PDFZoomPCT = Properties.Settings.Default.PDFZoomPCT;
-            tbZoomPCT.Text = Properties.Settings.Default.PDFZoomPCT.ToString();
-            cbIgnoreCase.Checked = LocalSettings.bIgnoreCase;
-            if (LocalSettings.strLastFolder == "")
-            {
-                LocalSettings.strLastFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                SaveLocalSettings();
-            }
-        }
 
         private void PhraseFinderForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            SaveLocalSettings();
+            globals.SaveLocalSettings(ref LocalSettings);
             if (ThisDoc == null) return;
-            if(ThisDoc.IsValid())
+            if (ThisDoc.IsValid())
                 ThisDoc.Close(1);
         }
 
-
-        private void btnExport_Click(object sender, EventArgs e)
-        {
-            string strOut = "";
-            for (int i = 0; i < NumPhrases; i++)
-            {
-                strOut += phlist[i].Phrase + "\r\n";
-            }
-            System.Windows.Forms.Clipboard.SetText(strOut);
-        }
-
-        private void HaveNewPhrases(string strTemp)
-        {
-            string[] strTemps = Regex.Split(strTemp, "\r\n");
-            NumPhrases = strTemps.Count();
-            InitialPhrase = new string[NumPhrases];
-            WorkingPhrases = new string[NumPhrases];
-            for (int i = 0; i < NumPhrases; i++)
-            {
-                InitialPhrase[i] = strTemps[i];
-            }
-            FillPhrases();
-        }
-        private void btnImport_Click(object sender, EventArgs e)
-        {
-            string strTemp = System.Windows.Forms.Clipboard.GetText();
-            if (strTemp == "")
-            {
-                MessageBox.Show("Clipboard is empty.  Do an export to see the correct format");
-                return;
-            }
-            HaveNewPhrases(strTemp);
-        }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -981,5 +788,6 @@ Click 'stop' if you want to quit, then exit the program.";
         {
             cbZoom.SelectedIndex = LocalSettings.PDFZoomInx;
         }
+
     }
 }

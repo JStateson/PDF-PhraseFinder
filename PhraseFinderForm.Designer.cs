@@ -41,8 +41,6 @@ namespace PDF_PhraseFinder
             settingsToolStripMenuItem = new ToolStripMenuItem();
             ofd = new OpenFileDialog();
             toolTip1 = new ToolTip(components);
-            btnExport = new Button();
-            btnImport = new Button();
             btnAdd = new Button();
             btnRemove = new Button();
             btnSave = new Button();
@@ -51,7 +49,6 @@ namespace PDF_PhraseFinder
             cbWholeWord = new CheckBox();
             dgv_phrases = new DataGridView();
             tbZoomPCT = new TextBox();
-            groupBox7 = new GroupBox();
             gbPageCtrl = new GroupBox();
             tbViewPage = new TextBox();
             btnViewDoc = new Button();
@@ -61,7 +58,7 @@ namespace PDF_PhraseFinder
             groupBox2 = new GroupBox();
             tbNumPages = new TextBox();
             tbPdfName = new TextBox();
-            groupBox5 = new GroupBox();
+            searchPanel = new GroupBox();
             groupBox4 = new GroupBox();
             tbpageNum = new TextBox();
             btnStopScan = new Button();
@@ -80,12 +77,11 @@ namespace PDF_PhraseFinder
             MStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)nudPage).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dgv_phrases).BeginInit();
-            groupBox7.SuspendLayout();
             gbPageCtrl.SuspendLayout();
             groupBox1.SuspendLayout();
             groupBox3.SuspendLayout();
             groupBox2.SuspendLayout();
-            groupBox5.SuspendLayout();
+            searchPanel.SuspendLayout();
             groupBox4.SuspendLayout();
             groupBox6.SuspendLayout();
             groupBox10.SuspendLayout();
@@ -133,35 +129,13 @@ namespace PDF_PhraseFinder
             // settingsToolStripMenuItem
             // 
             settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
-            settingsToolStripMenuItem.Size = new Size(61, 20);
-            settingsToolStripMenuItem.Text = "Settings";
+            settingsToolStripMenuItem.Size = new Size(59, 20);
+            settingsToolStripMenuItem.Text = "Phrases";
             settingsToolStripMenuItem.Click += settingsToolStripMenuItem_Click;
             // 
             // ofd
             // 
             ofd.FileName = "openFileDialog1";
-            // 
-            // btnExport
-            // 
-            btnExport.Location = new Point(26, 32);
-            btnExport.Name = "btnExport";
-            btnExport.Size = new Size(75, 23);
-            btnExport.TabIndex = 0;
-            btnExport.Text = "Export";
-            toolTip1.SetToolTip(btnExport, "copy to clipboard");
-            btnExport.UseVisualStyleBackColor = true;
-            btnExport.Click += btnExport_Click;
-            // 
-            // btnImport
-            // 
-            btnImport.Location = new Point(26, 81);
-            btnImport.Name = "btnImport";
-            btnImport.Size = new Size(75, 23);
-            btnImport.TabIndex = 1;
-            btnImport.Text = "Import";
-            toolTip1.SetToolTip(btnImport, "copy from clipboard\r\nuse notepad to edit phrase \r\nthen select and copy");
-            btnImport.UseVisualStyleBackColor = true;
-            btnImport.Click += btnImport_Click;
             // 
             // btnAdd
             // 
@@ -212,7 +186,7 @@ namespace PDF_PhraseFinder
             // 
             btnNext.Location = new Point(258, 44);
             btnNext.Name = "btnNext";
-            btnNext.Size = new Size(126, 35);
+            btnNext.Size = new Size(126, 33);
             btnNext.TabIndex = 3;
             btnNext.Text = "Next Phrase";
             toolTip1.SetToolTip(btnNext, "next phrase on any found page");
@@ -225,7 +199,7 @@ namespace PDF_PhraseFinder
             cbWholeWord.AutoSize = true;
             cbWholeWord.Checked = true;
             cbWholeWord.CheckState = CheckState.Checked;
-            cbWholeWord.Location = new Point(22, 48);
+            cbWholeWord.Location = new Point(22, 64);
             cbWholeWord.Name = "cbWholeWord";
             cbWholeWord.Size = new Size(92, 19);
             cbWholeWord.TabIndex = 6;
@@ -246,24 +220,12 @@ namespace PDF_PhraseFinder
             // 
             // tbZoomPCT
             // 
-            tbZoomPCT.Location = new Point(45, 117);
+            tbZoomPCT.Location = new Point(47, 154);
             tbZoomPCT.Name = "tbZoomPCT";
             tbZoomPCT.Size = new Size(33, 23);
             tbZoomPCT.TabIndex = 7;
             tbZoomPCT.Text = "100";
             toolTip1.SetToolTip(tbZoomPCT, "PDF zoom percent");
-            // 
-            // groupBox7
-            // 
-            groupBox7.Controls.Add(btnImport);
-            groupBox7.Controls.Add(btnExport);
-            groupBox7.Location = new Point(16, 203);
-            groupBox7.Name = "groupBox7";
-            groupBox7.Size = new Size(131, 137);
-            groupBox7.TabIndex = 1;
-            groupBox7.TabStop = false;
-            groupBox7.Text = "Clikpboard";
-            toolTip1.SetToolTip(groupBox7, "Use setting instead");
             // 
             // gbPageCtrl
             // 
@@ -304,7 +266,7 @@ namespace PDF_PhraseFinder
             groupBox1.Controls.Add(groupBox3);
             groupBox1.Controls.Add(groupBox2);
             groupBox1.Controls.Add(tbPdfName);
-            groupBox1.Location = new Point(253, 27);
+            groupBox1.Location = new Point(677, 42);
             groupBox1.Name = "groupBox1";
             groupBox1.Size = new Size(507, 171);
             groupBox1.TabIndex = 1;
@@ -347,27 +309,32 @@ namespace PDF_PhraseFinder
             // 
             // tbPdfName
             // 
+            tbPdfName.BackColor = SystemColors.ControlLightLight;
+            tbPdfName.ForeColor = SystemColors.MenuHighlight;
             tbPdfName.Location = new Point(76, 38);
             tbPdfName.Name = "tbPdfName";
+            tbPdfName.ReadOnly = true;
             tbPdfName.Size = new Size(407, 23);
             tbPdfName.TabIndex = 0;
             // 
-            // groupBox5
+            // searchPanel
             // 
-            groupBox5.Controls.Add(groupBox4);
-            groupBox5.Controls.Add(pbarLoading);
-            groupBox5.Location = new Point(787, 27);
-            groupBox5.Name = "groupBox5";
-            groupBox5.Size = new Size(406, 171);
-            groupBox5.TabIndex = 2;
-            groupBox5.TabStop = false;
-            groupBox5.Text = "Search Progress";
+            searchPanel.Controls.Add(groupBox4);
+            searchPanel.Controls.Add(pbarLoading);
+            searchPanel.Controls.Add(btnRunSearch);
+            searchPanel.Enabled = false;
+            searchPanel.Location = new Point(33, 42);
+            searchPanel.Name = "searchPanel";
+            searchPanel.Size = new Size(552, 171);
+            searchPanel.TabIndex = 2;
+            searchPanel.TabStop = false;
+            searchPanel.Text = "Search Progress";
             // 
             // groupBox4
             // 
             groupBox4.Controls.Add(tbpageNum);
             groupBox4.Controls.Add(btnStopScan);
-            groupBox4.Location = new Point(39, 85);
+            groupBox4.Location = new Point(281, 85);
             groupBox4.Name = "groupBox4";
             groupBox4.Size = new Size(253, 67);
             groupBox4.TabIndex = 3;
@@ -383,7 +350,6 @@ namespace PDF_PhraseFinder
             // 
             // btnStopScan
             // 
-            btnStopScan.Enabled = false;
             btnStopScan.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
             btnStopScan.ForeColor = Color.Red;
             btnStopScan.Location = new Point(31, 28);
@@ -396,17 +362,16 @@ namespace PDF_PhraseFinder
             // 
             // pbarLoading
             // 
-            pbarLoading.Location = new Point(39, 38);
+            pbarLoading.Location = new Point(281, 38);
             pbarLoading.Name = "pbarLoading";
             pbarLoading.Size = new Size(253, 23);
             pbarLoading.TabIndex = 0;
             // 
             // btnRunSearch
             // 
-            btnRunSearch.Enabled = false;
             btnRunSearch.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point);
             btnRunSearch.ForeColor = SystemColors.MenuHighlight;
-            btnRunSearch.Location = new Point(61, 95);
+            btnRunSearch.Location = new Point(48, 65);
             btnRunSearch.Name = "btnRunSearch";
             btnRunSearch.Size = new Size(135, 40);
             btnRunSearch.TabIndex = 3;
@@ -419,7 +384,6 @@ namespace PDF_PhraseFinder
             groupBox6.Controls.Add(groupBox10);
             groupBox6.Controls.Add(groupBox9);
             groupBox6.Controls.Add(groupBox8);
-            groupBox6.Controls.Add(groupBox7);
             groupBox6.Controls.Add(dgv_phrases);
             groupBox6.Location = new Point(33, 219);
             groupBox6.Name = "groupBox6";
@@ -436,7 +400,7 @@ namespace PDF_PhraseFinder
             groupBox10.Controls.Add(cbIgnoreCase);
             groupBox10.Location = new Point(16, 31);
             groupBox10.Name = "groupBox10";
-            groupBox10.Size = new Size(131, 146);
+            groupBox10.Size = new Size(131, 203);
             groupBox10.TabIndex = 5;
             groupBox10.TabStop = false;
             groupBox10.Text = "Local Settings";
@@ -445,7 +409,7 @@ namespace PDF_PhraseFinder
             // 
             cbZoom.FormattingEnabled = true;
             cbZoom.Items.AddRange(new object[] { "AVZoomNoVary", "AVZoomFitPage", "AVZoomFitWidth", "AVZoomFitHeight", "AVZoomVisWidth", "AVZoomPreferred" });
-            cbZoom.Location = new Point(9, 79);
+            cbZoom.Location = new Point(12, 108);
             cbZoom.Name = "cbZoom";
             cbZoom.Size = new Size(113, 23);
             cbZoom.TabIndex = 8;
@@ -524,7 +488,7 @@ namespace PDF_PhraseFinder
             tbMatches.Location = new Point(809, 228);
             tbMatches.Multiline = true;
             tbMatches.Name = "tbMatches";
-            tbMatches.ScrollBars = ScrollBars.Vertical;
+            tbMatches.ScrollBars = ScrollBars.Both;
             tbMatches.Size = new Size(384, 225);
             tbMatches.TabIndex = 5;
             tbMatches.Text = resources.GetString("tbMatches.Text");
@@ -537,8 +501,7 @@ namespace PDF_PhraseFinder
             Controls.Add(gbPageCtrl);
             Controls.Add(tbMatches);
             Controls.Add(groupBox6);
-            Controls.Add(btnRunSearch);
-            Controls.Add(groupBox5);
+            Controls.Add(searchPanel);
             Controls.Add(groupBox1);
             Controls.Add(MStrip);
             FormBorderStyle = FormBorderStyle.FixedToolWindow;
@@ -551,7 +514,6 @@ namespace PDF_PhraseFinder
             MStrip.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)nudPage).EndInit();
             ((System.ComponentModel.ISupportInitialize)dgv_phrases).EndInit();
-            groupBox7.ResumeLayout(false);
             gbPageCtrl.ResumeLayout(false);
             gbPageCtrl.PerformLayout();
             groupBox1.ResumeLayout(false);
@@ -560,7 +522,7 @@ namespace PDF_PhraseFinder
             groupBox3.PerformLayout();
             groupBox2.ResumeLayout(false);
             groupBox2.PerformLayout();
-            groupBox5.ResumeLayout(false);
+            searchPanel.ResumeLayout(false);
             groupBox4.ResumeLayout(false);
             groupBox4.PerformLayout();
             groupBox6.ResumeLayout(false);
@@ -587,16 +549,13 @@ namespace PDF_PhraseFinder
         private GroupBox groupBox2;
         private TextBox tbTotalMatch;
         private TextBox tbNumPages;
-        private GroupBox groupBox5;
+        private GroupBox searchPanel;
         private GroupBox groupBox4;
         private ProgressBar pbarLoading;
         private Button btnRunSearch;
         private GroupBox groupBox6;
         private DataGridView dgv_phrases;
         private TextBox tbMatches;
-        private GroupBox groupBox7;
-        private Button btnImport;
-        private Button btnExport;
         private GroupBox groupBox8;
         private Button btnSave;
         private Button btnRemove;

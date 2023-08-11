@@ -31,28 +31,28 @@
             components = new System.ComponentModel.Container();
             groupBox2 = new GroupBox();
             btnChkErr = new Button();
-            label2 = new Label();
             label1 = new Label();
             btnCancel = new Button();
             btnApply = new Button();
             btnClear = new Button();
             tbPhrases = new TextBox();
             toolTip1 = new ToolTip(components);
+            textBox1 = new TextBox();
             groupBox2.SuspendLayout();
             SuspendLayout();
             // 
             // groupBox2
             // 
+            groupBox2.Controls.Add(textBox1);
             groupBox2.Controls.Add(btnChkErr);
-            groupBox2.Controls.Add(label2);
             groupBox2.Controls.Add(label1);
             groupBox2.Controls.Add(btnCancel);
             groupBox2.Controls.Add(btnApply);
             groupBox2.Controls.Add(btnClear);
             groupBox2.Controls.Add(tbPhrases);
-            groupBox2.Location = new Point(31, 44);
+            groupBox2.Location = new Point(31, 12);
             groupBox2.Name = "groupBox2";
-            groupBox2.Size = new Size(695, 376);
+            groupBox2.Size = new Size(695, 408);
             groupBox2.TabIndex = 0;
             groupBox2.TabStop = false;
             groupBox2.Text = "Default Phrases";
@@ -64,18 +64,9 @@
             btnChkErr.Size = new Size(102, 23);
             btnChkErr.TabIndex = 7;
             btnChkErr.Text = "Check Syntax";
+            toolTip1.SetToolTip(btnChkErr, "Must be 3 characters or more");
             btnChkErr.UseVisualStyleBackColor = true;
             btnChkErr.Click += btnChkErr_Click;
-            // 
-            // label2
-            // 
-            label2.AutoSize = true;
-            label2.BackColor = SystemColors.Info;
-            label2.Location = new Point(34, 39);
-            label2.Name = "label2";
-            label2.Size = new Size(299, 15);
-            label2.TabIndex = 6;
-            label2.Text = "Use the clipboard and notepad to save / restore phrases\r\n";
             // 
             // label1
             // 
@@ -120,12 +111,23 @@
             // 
             // tbPhrases
             // 
-            tbPhrases.Location = new Point(6, 74);
+            tbPhrases.Location = new Point(6, 101);
             tbPhrases.Multiline = true;
             tbPhrases.Name = "tbPhrases";
             tbPhrases.ScrollBars = ScrollBars.Both;
             tbPhrases.Size = new Size(460, 281);
             tbPhrases.TabIndex = 0;
+            // 
+            // textBox1
+            // 
+            textBox1.BackColor = SystemColors.Info;
+            textBox1.Location = new Point(46, 31);
+            textBox1.Multiline = true;
+            textBox1.Name = "textBox1";
+            textBox1.ReadOnly = true;
+            textBox1.Size = new Size(354, 45);
+            textBox1.TabIndex = 8;
+            textBox1.Text = "Use the clipboard (copy / paste)  and notepad\r\n to save / restore phrases";
             // 
             // InitialParams
             // 
@@ -148,8 +150,8 @@
         private ToolTip toolTip1;
         private Button btnClear;
         private Button btnCancel;
-        private Label label2;
         private Label label1;
         private Button btnChkErr;
+        private TextBox textBox1;
     }
 }
