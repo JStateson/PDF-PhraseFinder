@@ -219,10 +219,10 @@ namespace PDF_PhraseFinder
 @"Adobe Acrobat Pro and Standard verify licensing at
 startup of Acrobat and randomly at various times while
 this Acrobat app is running.  When this happens the
-Phrase Finder Application (FFA) will freeze.
+Phrase Finder Application (PFA) will freeze.
 
 The freeze may last for 10 or more seconds.  During this
-freeze please do not click on any FFA form or the Acrobat
+freeze please do not click on any PFA form or the Acrobat
 document itself.  If the freeze lasts more than 30 seconds
 you may have to close or possibly terminate FFA including
 the Acrobat-32 process show in the task manager.
