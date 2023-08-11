@@ -1,6 +1,6 @@
 # PDF-PhraseFinder
 
-Program search through a PDF and displays matches
+Program searchs through a PDF and displays matches
 
 App uses Adobe SDK
 
