@@ -10,6 +10,7 @@ using System.Text;
 using System.ComponentModel;
 using System.Configuration;
 using System.Reflection;
+using System.Windows.Forms;
 //using System.Timers;
 
 
@@ -441,7 +442,7 @@ namespace PDF_PhraseFinder
             for (int i = 0; i < NumPhrases; i++)
             {
                 cpt = new cPhraseTable();
-                cpt.InitPhrase(InitialPhrase[i]);
+                cpt.InitPhrase(InitialPhrase[i], bUsePhrase[i]);
                 phlist.Add(cpt);
             }
             dgv_phrases.DataSource = phlist.ToArray();
@@ -449,7 +450,6 @@ namespace PDF_PhraseFinder
 
         private void ClearLastResults()
         {
-            //FillPhrases(); this has side effects and erases the checkboxes
             int i = 0;
             cPhraseTable cpt;
             foreach (DataGridViewRow row in dgv_phrases.Rows)
@@ -516,6 +516,7 @@ namespace PDF_PhraseFinder
         /// <summary>
         /// get the phrase out of that view data table and configure it for
         /// doing the searching.  User may have changed the phrase and not saved them
+        /// be sure to check for bad construction of a phrase 
         /// </summary>
         private void FormWorkingFromTable()
         {
@@ -528,12 +529,40 @@ namespace PDF_PhraseFinder
                 WorkingPhrases[i] += strTemp.Trim();
                 WorkingPhrases[i] += cbWholeWord.Checked ? " " : "";
             }
+        }
 
+        /// <summary>
+        /// Check for improper wording or characters in the phrase
+        /// since the user may have edited the phrases be sure to sort them
+        /// </summary>
+        /// <returns></returns>
+        private bool ErrorsInTable()
+        {
+            bool bMustSort = false; // length of phrase may have changed
+            for(int i = 0; i < NumPhrases;i++)
+            {
+                string strTemp = globals.RemoveWhiteSpace(phlist[i].Phrase);
+                bool bErr = globals.CheckSyntax(strTemp);
+                if (bErr) return true;
+                if (strTemp != phlist[i].Phrase)
+                {
+                    bMustSort = true;
+                    phlist[i].Phrase = strTemp;
+                    InitialPhrase[i] = strTemp;
+                }
+            }
+            if(bMustSort)
+            {
+                SortPhrasesList();
+                FillNewPhrases();
+            }
+            return false;
         }
 
         private void btnRunSearch_Click(object sender, EventArgs e)
         {
             ClearLastResults();
+            if (ErrorsInTable()) return;
             FormWorkingFromTable();
             btnRunSearch.Enabled = false;
             btnStopScan.Enabled = true;
@@ -622,6 +651,7 @@ namespace PDF_PhraseFinder
         {
             int n = 0;
             int i = 0;
+            DialogResult DiaRes;
             List<int> KeepList = new List<int>();
             bool[] bOld;
             foreach (DataGridViewRow dgvr in dgv_phrases.Rows)
@@ -633,12 +663,17 @@ namespace PDF_PhraseFinder
                 else KeepList.Add(i);
                 i++;
             }
-            DialogResult dialogResult = MessageBox.Show(
+            if(n == 0)
+            {
+                DiaRes = MessageBox.Show(
+                    "You need to highlight the entire row to delete a phrase","Warning");
+                return;
+            }
+            DiaRes = MessageBox.Show(
     "This operation will delete " + n + " highlighted filter phrases.  Are you sure?",
-    "Warning: don't forget to save", MessageBoxButtons.YesNo);
-            if (n == 0) return;
+    "Warning: don't forget to save", MessageBoxButtons.OKCancel);
             n = NumPhrases - n;
-            if (dialogResult == DialogResult.Yes)
+            if (DiaRes == DialogResult.Yes)
             {
                 WorkingPhrases = new string[n];
                 bOld = new bool[n];
@@ -737,15 +772,23 @@ namespace PDF_PhraseFinder
         private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             List<string> strReturn = new List<string>();
-            InitialParams ipSetup = new InitialParams(ref InitialPhrase, ref strReturn);
+            List<string> InitialPhraseChk = new List<string>();
+            for(int i = 0; i < NumPhrases; i++)
+            {
+                string str = (string)dgv_phrases.Rows[i].Cells[1].EditedFormattedValue;
+                InitialPhraseChk.Add((bUsePhrase[i] ? "1:" : "0:") + str);
+            }
+            InitialParams ipSetup = new InitialParams(ref InitialPhraseChk, ref strReturn);
             ipSetup.ShowDialog();   // does not return unless dialog box closed
             if (strReturn.Count() == 0) return;
             NumPhrases = strReturn.Count();
             InitialPhrase = new string[NumPhrases];
             WorkingPhrases = new string[NumPhrases];
+            bUsePhrase = new bool[NumPhrases];
             for (int i = 0; i < NumPhrases; i++)
             {
-                InitialPhrase[i] = strReturn[i];
+                bUsePhrase[i] = strReturn[i].Substring(0, 2) == "1:";
+                InitialPhrase[i] = strReturn[i].Substring(2);
             }
             SortPhrasesList();
             FillNewPhrases();

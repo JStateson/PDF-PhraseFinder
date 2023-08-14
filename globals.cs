@@ -11,6 +11,49 @@ namespace PDF_PhraseFinder
     internal static class globals
     {
 
+        public static string BadLetters = ".,/|[]{}\\-_=!@#$%^&*()+`~,./;:'\"";
+
+        // return true if a problem with the phrase construction, else false;
+        public static bool CheckSyntax(string aPhrase)
+        {
+
+            string strBad = "";
+            int j, n = BadLetters.Length;
+            for (int i = 0; i < n; i++)
+            {
+                if (aPhrase.Contains(BadLetters.Substring(i, 1)))
+                {
+                    strBad += BadLetters.Substring(i, 1) + " ";
+                }
+            }
+            if (strBad != "")
+            {
+                MessageBox.Show("Cannot have characters: " + strBad + " in phrase " + aPhrase, "Bad phrase found");
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// ensure that exactly one space is between each word in a phrase
+        /// </summary>
+        /// <param name="strIn"></param>
+        /// <returns></returns>
+        public static string RemoveWhiteSpace(string strIn)
+        {
+            char[] whitespace = new char[] { ' ', '\t' };
+            string[] sStr = strIn.Split(whitespace, StringSplitOptions.RemoveEmptyEntries);
+            string strOut = "";
+            foreach(string str in sStr)
+            {
+                strOut += str + " ";
+            }
+            return strOut;
+        }
+
+
+
+
         /// <summary>
         /// save the phrases in the users window property list
         /// </summary>
@@ -113,6 +156,7 @@ namespace PDF_PhraseFinder
             }
         }
 
+
         public static string GiveRunWarning()
         {
             string strWarning =
@@ -181,6 +225,8 @@ application as Non Responding";
             if (n > 1) return n - 1; // if 2 words then must check one more word
             return 0;
         }
+
+
         public void InitPhrase(string aPhrase)
         {
             Select = true;
