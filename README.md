@@ -2,6 +2,6 @@
 
 Program searchs through a PDF and displays matches
 
-App uses Adobe SDK
+App uses Adobe Pro or Standard which 'phones home'
 
-Licenses checking in SDK by Adobe will freeze app during checking
+Licenses checking by Adobe will freeze app while verification of license
