@@ -97,11 +97,6 @@ namespace PDF_PhraseFinder
 
         }
 
-        //private void OnTimedEvent(Object source, ElapsedEventArgs e)
-        //{
-        //    ShowFoundPhrase();
-        //}
-
         private bool GetPageCount()
         {
             CAcroPDDoc pdDoc = (CAcroPDDoc)AVDoc.GetPDDoc();

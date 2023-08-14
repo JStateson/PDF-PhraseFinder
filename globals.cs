@@ -119,7 +119,7 @@ namespace PDF_PhraseFinder
 @"While the search is running, do not edit or close the
 document.  Watch the document and be sure to dismiss any
 popups else the search will stop and the program may
-freeze.  When the search is finished, click on any of
+freeze.  When the search is finished, click only on any of
 the match page numbers in the 3rd column under the
 title 'Numbers'.  Selecting other columns allows editing
 the table.  Click 'stop' if you want to quit, then exit
@@ -139,7 +139,7 @@ Phrase Finder Application (PFA) will freeze.
 The freeze may last for 10 or more seconds.  During this
 freeze please do not click on any PFA form or the Acrobat
 document itself.  If the freeze lasts more than 30 seconds
-you may have to close or possibly terminate FFA including
+you may have to close or possibly terminate PFA including
 the Acrobat-32 process show in the task manager.
 
 Clicking on the form while the acrobat is waiting for
