@@ -556,13 +556,14 @@ namespace PDF_PhraseFinder
                 SortPhrasesList();
                 FillNewPhrases();
             }
+            dgv_phrases.Refresh();
             return false;
         }
 
         private void btnRunSearch_Click(object sender, EventArgs e)
         {
             ClearLastResults();
-            if (ErrorsInTable()) return;
+            if (SaveEditedValues()) return;
             FormWorkingFromTable();
             btnRunSearch.Enabled = false;
             btnStopScan.Enabled = true;
@@ -751,8 +752,14 @@ namespace PDF_PhraseFinder
         {
             globals.SaveLocalSettings(ref LocalSettings);
             if (ThisDoc == null) return;
-            if (ThisDoc.IsValid())
-                ThisDoc.Close(1);
+            try
+            {
+                if (ThisDoc.IsValid())
+                    ThisDoc.Close(1);
+            }
+            catch (Exception ex)
+            { 
+            }
         }
 
 
@@ -769,6 +776,26 @@ namespace PDF_PhraseFinder
             MyHelp.Show();  // this leaves dialog box on the screen
         }
 
+
+        /// <summary>
+        /// copy any edits in the data view table to the data array and verify them
+        /// note that EditedFormattedValue may have user errors 
+        /// </summary>
+        private bool SaveEditedValues()
+        {
+            for (int i = 0; i < NumPhrases; i++)
+            {
+                string str = (string)dgv_phrases.Rows[i].Cells[1].EditedFormattedValue;
+                bool bUse = (bool)dgv_phrases.Rows[i].Cells[0].EditedFormattedValue;
+                phlist[i].Phrase = str;
+                InitialPhrase[i] = str;
+                phlist[i].Select = bUse;
+                bUsePhrase[i] = bUse;
+            }
+            bool bErr = ErrorsInTable();
+            return bErr;
+        }
+
         private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             List<string> strReturn = new List<string>();
@@ -776,7 +803,8 @@ namespace PDF_PhraseFinder
             for(int i = 0; i < NumPhrases; i++)
             {
                 string str = (string)dgv_phrases.Rows[i].Cells[1].EditedFormattedValue;
-                InitialPhraseChk.Add((bUsePhrase[i] ? "1:" : "0:") + str);
+                bool bUse = (bool)dgv_phrases.Rows[i].Cells[0].EditedFormattedValue;
+                InitialPhraseChk.Add((bUse ? "1:" : "0:") + str);
             }
             InitialParams ipSetup = new InitialParams(ref InitialPhraseChk, ref strReturn);
             ipSetup.ShowDialog();   // does not return unless dialog box closed
